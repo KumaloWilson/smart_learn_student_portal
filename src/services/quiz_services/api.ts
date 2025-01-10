@@ -1,73 +1,42 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../../configs/config';
-import { Quiz } from '../../models/quiz';
 
-export const adminApi = {
-    getAllAdmins: async () => {
-        const response = await axios.get(`${API_BASE_URL}/admin`);
+export const apiService = {
+    // Start a new quiz attempt
+    startQuiz: async (quiz_id: string) => {
+        const response = await axios.post(`${API_BASE_URL}/quiz/start`, { quiz_id });
         return response.data;
     },
 
-    getAdminById: async (id: string) => {
-        const response = await axios.get(`${API_BASE_URL}/admin/${id}`);
+    // Submit a response for a specific question in the quiz attempt
+    submitResponse: async (responseData: {
+        attempt_id: string;
+        question_id: string;
+        student_answer: string;
+        time_taken: number;
+    }) => {
+        const response = await axios.post(`${API_BASE_URL}/quiz/responses`, responseData);
         return response.data;
     },
 
-    createAdmin: async (admin: Omit<Admin, 'admin'>) => {
-        const response = await axios.post(`${API_BASE_URL}/admin`, admin);
+    // Submit the complete set of responses for the quiz attempt
+    submitQuiz: async (attempt_id: string, responses: unknown[]) => {
+        const response = await axios.post(`${API_BASE_URL}/quiz/submit`, {
+            attempt_id,
+            responses
+        });
         return response.data;
     },
 
-    updateAdmin: async (id: string, admin: Partial<Admin>) => {
-        const response = await axios.put(`${API_BASE_URL}/admin/${id}`, admin);
+    // Fetch available quizzes
+    getQuizzes: async (filterType: string | undefined) => {
+        const response = await axios.get(`${API_BASE_URL}/quiz/available`);
         return response.data;
     },
 
-    deleteAdmin: async (id: string) => {
-        const response = await axios.delete(`${API_BASE_URL}/admin/${id}`);
+    // Fetch the responses submitted for a specific quiz attempt
+    getAttemptResponses: async (attempt_id: string) => {
+        const response = await axios.get(`${API_BASE_URL}/quiz/responses/${attempt_id}`);
         return response.data;
-    },
-};
-
-
-
-export const quizService = {
-    async getQuizzes(): Promise<Quiz[]> {
-        const { data } = await api.get('/quizzes');
-        return data;
-    },
-
-    async getQuiz(id: string): Promise<Quiz> {
-        const { data } = await api.get(`/quizzes/${id}`);
-        return data;
-    },
-
-    async startAttempt(quizId: string): Promise<string> {
-        const { data } = await api.post(`/quiz-attempts/start`, { quiz_id: quizId });
-        return data.attempt_id;
-    },
-
-    async submitAnswer(answer: Partial<QuizAnswer>): Promise<{
-        is_correct: boolean;
-        points_earned: number;
-        explanation: string;
-    }> {
-        const { data } = await api.post('/quiz-attempts/submit-answer', answer);
-        return data;
-    },
-
-    async completeAttempt(attemptId: string): Promise<QuizAttempt> {
-        const { data } = await api.post(`/quiz-attempts/${attemptId}/complete`);
-        return data;
-    },
-
-    async getTopicAnalytics(topic: string): Promise<TopicAnalytics> {
-        const { data } = await api.get(`/progress/topic/${topic}`);
-        return data;
-    },
-
-    async getStudyPlan(): Promise<any> {
-        const { data } = await api.get('/progress/study-plan');
-        return data;
     }
 };

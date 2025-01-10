@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
@@ -22,15 +23,23 @@ import {
   BulbOutlined,
   RocketOutlined
 } from "@ant-design/icons";
-import { Layout, Menu, Breadcrumb, theme } from "antd";
+import { Layout, Menu, Breadcrumb, theme, Spin } from "antd";
 import type { MenuProps } from "antd";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { QuizList } from "./views/quiz/quiz_list";
+import QuizResult from "./views/quiz/quiz_result";
+import QuizSession from "./views/quiz/quiz_session";
+
 
 const queryClient = new QueryClient();
 const { Header, Content, Footer, Sider } = Layout;
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedQuizView, setSelectedQuizView] = useState<string | null>(null);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [breadcrumbItems, setBreadcrumbItems] = useState(['Student Portal', 'Dashboard']);
 
   const items: MenuProps["items"] = [
     {
@@ -126,60 +135,183 @@ const App: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  const [selectedTab, setSelectedTab] = useState("dashboard");
+  const handleQuizStart = (attempt_id: string) => {
+    setAttemptId(attempt_id);
+    setSelectedQuizView('session');
+    setBreadcrumbItems(['Student Portal', 'Quizzes', 'Active Session']);
+  };
+
+  const handleQuizComplete = (attempt_id: string) => {
+    setAttemptId(attempt_id);
+    setSelectedQuizView('result');
+    setBreadcrumbItems(['Student Portal', 'Quizzes', 'Quiz Result']);
+  };
 
   const contentMap: Record<string, React.ReactNode> = {
-    // dashboard: <StudentDashboard />,
-    // enrolled: <EnrolledCourses />,
-    // available: <AvailableQuizzes />,
-    // attempts: <QuizAttempts />,
-    // results: <QuizResults />,
-    // progress: <LearningProgress />,
-    // practice: <PracticeTests />,
-    // // Add other components as needed
+    dashboard: <div>Dasboard</div>,
+    profile: <div>Profile</div>,
+    available: (
+      <QuizList
+        onQuizStart={handleQuizStart}
+      />
+    ),
+    attempts: <QuizList filterType="attempts" />,
+    results: (
+      selectedQuizView === 'result' && attemptId ? (
+        <QuizResult
+          attemptId={attemptId}
+          onBackToList={() => {
+            setSelectedQuizView(null);
+            setAttemptId(null);
+            setSelectedTab('available');
+            setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
+          }}
+        />
+      ) : (
+        <QuizList filterType="completed" />
+      )
+    ),
+    progress: <div>Learning Progress Content</div>,
+    practice: <div>Practice Tests Content</div>,
+    enrolled: <div>Enrolled Courses Content</div>,
+    materials: <div>Course Materials Content</div>,
+    assignments: <div>Assignments Content</div>,
+    timetable: <div>Class Timetable Content</div>,
+    exams: <div>Exam Schedule Content</div>,
+    deadlines: <div>Assignment Deadlines Content</div>,
+    grades: <div>Grades & Marks Content</div>,
+    analytics: <div>Learning Analytics Content</div>,
+    feedback: <div>Instructor Feedback Content</div>,
+    library: <div>Digital Library Content</div>,
+    pastpapers: <div>Past Papers Content</div>,
+    studygroups: <div>Study Groups Content</div>,
+    announcements: <div>Announcements Content</div>,
+    messages: <div>Messages Content</div>,
+    discussions: <div>Discussion Forums Content</div>,
+    attendance: <div>Attendance Content</div>,
+    notifications: <div>Notifications Content</div>,
+    help: <div>Help & Support Content</div>
+  };
+
+  const renderContent = () => {
+    if (selectedTab === 'available' && selectedQuizView === 'session' && attemptId) {
+      return (
+        <QuizSession
+          attemptId={attemptId}
+          onComplete={handleQuizComplete}
+        />
+      );
+    }
+
+    const content = contentMap[selectedTab];
+    if (!content) {
+      return <Spin size="large" />;
+    }
+    return content;
+  };
+
+  const handleMenuClick: MenuProps['onClick'] = ({ key, keyPath }) => {
+    setSelectedTab(key);
+
+    // Update breadcrumb based on menu selection
+    const newBreadcrumb = ['Student Portal'];
+
+    // Handle parent menu items
+    if (keyPath.length > 1) {
+      const parentKey = keyPath[1];
+      const parentItem = items.find(item => item?.key === parentKey);
+      if (parentItem && 'label' in parentItem) {
+        newBreadcrumb.push(parentItem.label as string);
+      }
+    }
+
+    // Add current selection to breadcrumb
+    const selectedItem = items.find(item =>
+      item && 'children' in item && item.children?.some(child => child?.key === key)
+    )?.children?.find(child => child.key === key);
+
+    newBreadcrumb.push(selectedItem?.label as string ||
+      items.find(item => item?.key === key)?.label as string ||
+      key.charAt(0).toUpperCase() + key.slice(1));
+
+    setBreadcrumbItems(newBreadcrumb);
+
+    // Reset quiz view state when changing main menu items
+    if (key !== 'available') {
+      setSelectedQuizView(null);
+      setAttemptId(null);
+    }
   };
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Layout style={{ minHeight: "100vh" }}>
-        <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-          <div className="flex justify-center items-center p-4">
-            <img
-              src="../src/assets/logo.jpeg"
-              alt="Student"
-              className="w-16 h-16 rounded-full border-2 border-white"
-            />
-          </div>
-          <div className="text-white text-center py-2 font-semibold">
-            {!collapsed && "Student Portal"}
-          </div>
-          <Menu
-            theme="dark"
-            defaultSelectedKeys={["dashboard"]}
-            mode="inline"
-            items={items}
-            onClick={({ key }) => setSelectedTab(key)}
-          />
-        </Sider>
-        <Layout>
-          <Header style={{ padding: 0, background: colorBgContainer }}>
-            <Breadcrumb style={{ margin: "16px" }}>
-              <Breadcrumb.Item>Student Portal</Breadcrumb.Item>
-              <Breadcrumb.Item>
-                {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}
-              </Breadcrumb.Item>
-            </Breadcrumb>
-          </Header>
-          <Content style={{ margin: "16px" }}>
-            <div style={{ padding: 24, background: colorBgContainer }}>
-              {contentMap[selectedTab]}
+      <Router>
+        <Layout style={{ minHeight: "100vh" }}>
+          <Sider
+            collapsible
+            collapsed={collapsed}
+            onCollapse={(value) => setCollapsed(value)}
+            style={{
+              overflow: 'auto',
+              height: '100vh',
+              position: 'fixed',
+              left: 0,
+            }}
+          >
+            <div className="flex justify-center items-center p-4">
+              <img
+                src="/logo.jpeg"
+                alt="Student"
+                className="w-16 h-16 rounded-full border-2 border-white"
+              />
             </div>
-          </Content>
-          <Footer style={{ textAlign: "center" }}>
-            LearnSmart Student Portal ©{new Date().getFullYear()}
-          </Footer>
+            <div className="text-white text-center py-2 font-semibold">
+              {!collapsed && "Student Portal"}
+            </div>
+            <Menu
+              theme="dark"
+              defaultSelectedKeys={["dashboard"]}
+              mode="inline"
+              items={items}
+              onClick={handleMenuClick}
+              selectedKeys={[selectedTab]}
+            />
+          </Sider>
+          <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
+            <Header style={{
+              padding: 0,
+              background: colorBgContainer,
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              width: '100%'
+            }}>
+              <Breadcrumb style={{ margin: "16px 24px" }}>
+                {breadcrumbItems.map((item, index) => (
+                  <Breadcrumb.Item key={index}>{item}</Breadcrumb.Item>
+                ))}
+              </Breadcrumb>
+            </Header>
+            <Content style={{ margin: "24px 16px 0", overflow: 'initial' }}>
+              <div style={{
+                padding: 24,
+                minHeight: 360,
+                background: colorBgContainer,
+                borderRadius: 8,
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+              }}>
+                {renderContent()}
+              </div>
+            </Content>
+            <Footer style={{
+              textAlign: "center",
+              background: colorBgContainer
+            }}>
+              LearnSmart Student Portal ©{new Date().getFullYear()}
+            </Footer>
+          </Layout>
         </Layout>
-      </Layout>
+      </Router>
     </QueryClientProvider>
   );
 };
