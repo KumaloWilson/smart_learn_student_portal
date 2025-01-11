@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Typography, Spin, Empty, Button, Form, Modal, Select, InputNumber, message } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
-import { QuizCard } from '../../components/quiz/card';
+import { QuizCard } from '../../components/quiz/quiz_card';
 import { apiService } from '../../services/quiz_services/api';
 import { Quiz } from '../../models/quiz';
 import { v4 as uuidv4 } from 'uuid';

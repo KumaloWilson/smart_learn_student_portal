@@ -22,7 +22,7 @@ export const apiService = {
 
     // Submit the complete set of responses for the quiz attempt
     submitQuiz: async (attempt_id: string, responses: unknown[]) => {
-        const response = await axios.post(`${API_BASE_URL}/quiz/submit`, {
+        const response = await axios.post(`${API_BASE_URL}/quiz/session/submit`, {
             attempt_id,
             responses
         });

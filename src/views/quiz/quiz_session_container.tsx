@@ -5,6 +5,7 @@ import { LoadingOutlined, ExclamationCircleOutlined, ClockCircleOutlined } from 
 import { QuizSession } from '../../components/quiz/quiz_session';
 import { apiService } from '../../services/quiz_services/api';
 import { useQuizSession } from '../../hooks/quiz/quiz_session';
+import { QuestionResponse } from '../../models/quiz_question_response';
 
 const QuizSessionContainer: React.FC = () => {
     const { attempt_id } = useParams<{ attempt_id: string }>();
@@ -22,7 +23,12 @@ const QuizSessionContainer: React.FC = () => {
     const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
 
-    const handleQuizComplete = async (responses: unknown[]) => {
+
+
+    const handleQuizComplete = async (responses: QuestionResponse[]) => {
+
+        console.log(responses);
+
         setSubmitting(true);
         try {
             // Simulate progress for better UX
@@ -30,12 +36,14 @@ const QuizSessionContainer: React.FC = () => {
                 setSubmitProgress(prev => Math.min(prev + 10, 90));
             }, 300);
 
-            const result = await apiService.submitQuiz(attempt_id!, responses);
+            const response = await apiService.submitQuiz(attempt_id!, responses);
+
+            console.log(response);
 
             clearInterval(progressInterval);
             setSubmitProgress(100);
 
-            if (result.data.status === 'completed') {
+            if (response.data.success === true) {
                 message.success({
                     content: 'Quiz submitted successfully!',
                     duration: 3,
@@ -57,37 +65,6 @@ const QuizSessionContainer: React.FC = () => {
         } finally {
             setSubmitting(false);
             setSubmitProgress(0);
-        }
-    };
-
-    const handleSubmitResponse = async (responseData: {
-        attempt_id: string;
-        question_id: string;
-        student_answer: string;
-        time_taken: number;
-    }) => {
-        const hide = message.loading('Submitting answer...', 0);
-        try {
-            const response = await apiService.submitResponse(responseData);
-
-            if (response.data.status === 'error') {
-                throw new Error(response.data.message);
-            }
-
-            hide();
-            message.success({
-                content: 'Answer submitted successfully',
-                icon: <span>✓</span>
-            });
-            return response.data;
-        } catch (error) {
-            hide();
-            message.error({
-                content: 'Failed to submit answer. Please try again.',
-                duration: 5
-            });
-            console.error('Response submission error:', error);
-            throw error;
         }
     };
 
@@ -203,7 +180,6 @@ const QuizSessionContainer: React.FC = () => {
                 attempt_id={attempt_id!}
                 initialQuestions={session.questions}
                 onQuizComplete={handleQuizComplete}
-                onSubmitResponse={handleSubmitResponse}
             />
 
             <div className="fixed bottom-4 right-4">

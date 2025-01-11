@@ -3,17 +3,13 @@ import { Modal, message, Row, Col, Progress, Space, Alert, Button, Tooltip } fro
 import { QuestionCard } from './question_card';
 import { Question } from '../../models/quiz_question';
 import { QuestionCircleOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { QuestionResponse } from '../../models/quiz_question_response';
+import { v4 as uuidv4 } from 'uuid';
 
 interface QuizSessionProps {
     attempt_id: string;
     initialQuestions?: Question[];
-    onQuizComplete: (responses: unknown[]) => void;
-    onSubmitResponse: (responseData: {
-        attempt_id: string;
-        question_id: string;
-        student_answer: string;
-        time_taken: number;
-    }) => Promise<unknown>;
+    onQuizComplete: (responses: QuestionResponse[]) => void;
 }
 
 interface SessionState {
@@ -25,11 +21,10 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
     attempt_id,
     initialQuestions = [],
     onQuizComplete,
-    onSubmitResponse
 }) => {
     const [session, setSession] = useState<SessionState>({
         questions: initialQuestions,
-        current_question_index: 0
+        current_question_index: 0,
     });
     const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
         initialQuestions[0] || null
@@ -38,16 +33,17 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
     const [remainingTime, setRemainingTime] = useState<number>(
         initialQuestions[0]?.time_estimate || 0
     );
-    const [showHint, setShowHint] = useState(false);
-    const [responses, setResponses] = useState<unknown[]>([]);
+    const [responses, setResponses] = useState<QuestionResponse[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showHint, setShowHint] = useState(false);
     const [timeWarning, setTimeWarning] = useState(false);
 
+    // Initialize session on initialQuestions change
     useEffect(() => {
         if (initialQuestions.length > 0) {
             setSession({
                 questions: initialQuestions,
-                current_question_index: 0
+                current_question_index: 0,
             });
             setCurrentQuestion(initialQuestions[0]);
             setRemainingTime(initialQuestions[0].time_estimate);
@@ -59,7 +55,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
         if (remainingTime <= 0) return;
 
         const timer = setInterval(() => {
-            setRemainingTime(prev => {
+            setRemainingTime((prev) => {
                 const newTime = prev - 1;
                 if (newTime <= 30 && !timeWarning) {
                     setTimeWarning(true);
@@ -77,9 +73,10 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
         message.success({
             content: 'Answer selected',
             duration: 1,
-            className: 'custom-message'
+            className: 'custom-message',
         });
     };
+
 
     const handleSubmitAnswer = async () => {
         if (!selectedAnswer || !currentQuestion) {
@@ -88,13 +85,26 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
         }
 
         setIsSubmitting(true);
+
         try {
-            const response = await onSubmitResponse({
+            const pointsEarned = selectedAnswer === currentQuestion.correct_answer
+                ? currentQuestion.points
+                : 0;
+
+            const feedback = selectedAnswer === currentQuestion.correct_answer
+                ? 'Correct!'
+                : `Incorrect. The correct answer is "${currentQuestion.correct_answer}".`;
+
+            const response: QuestionResponse = {
+                response_id: uuidv4(),
                 attempt_id,
                 question_id: currentQuestion.question_id,
                 student_answer: selectedAnswer,
-                time_taken: currentQuestion.time_estimate - remainingTime,
-            });
+                is_correct: selectedAnswer === currentQuestion.correct_answer,
+                time_taken: 2,
+                points_earned: pointsEarned,
+                feedback,
+            };
 
             const updatedResponses = [...responses, response];
             setResponses(updatedResponses);
@@ -102,14 +112,14 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
             if (session.current_question_index < session.questions.length - 1) {
                 message.success({
                     content: 'Answer submitted successfully!',
-                    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
                 });
 
                 const nextIndex = session.current_question_index + 1;
-                setSession({
-                    ...session,
+                setSession((prevSession) => ({
+                    ...prevSession,
                     current_question_index: nextIndex,
-                });
+                }));
                 setCurrentQuestion(session.questions[nextIndex]);
                 setSelectedAnswer(null);
                 setRemainingTime(session.questions[nextIndex].time_estimate);
@@ -121,7 +131,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
         } catch (error) {
             message.error({
                 content: `Failed to submit answer. Please try again. ${error}`,
-                duration: 5
+                duration: 5,
             });
         } finally {
             setIsSubmitting(false);
@@ -170,7 +180,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
                                 percent={timePercent}
                                 format={() => `${remainingTime}s`}
                                 width={60}
-                                status={timeWarning ? "exception" : "normal"}
+                                status={timeWarning ? 'exception' : 'normal'}
                             />
                         </Tooltip>
                     </Col>
