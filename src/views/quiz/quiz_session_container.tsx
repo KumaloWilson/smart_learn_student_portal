@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, } from 'react-router-dom';
 import { message, Spin, Result, Button, Modal, Progress, Space, Alert } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { QuizSession } from '../../components/quiz/quiz_session';
 import { apiService } from '../../services/quiz_services/api';
 import { useQuizSession } from '../../hooks/quiz/quiz_session';
 
-interface LocationState {
-    fromQuizList?: boolean;
-}
-
 const QuizSessionContainer: React.FC = () => {
     const { attempt_id } = useParams<{ attempt_id: string }>();
     const navigate = useNavigate();
-    const location = useLocation();
-    const locationState = location.state as LocationState;
     const [submitting, setSubmitting] = useState(false);
     const [submitProgress, setSubmitProgress] = useState(0);
 
@@ -22,33 +16,11 @@ const QuizSessionContainer: React.FC = () => {
         session,
         loading,
         error,
-        resetSession
-    } = useQuizSession(attempt_id || ''); // Provide empty string as fallback
+    } = useQuizSession(attempt_id!);
 
     // Custom loading spinner
     const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
-    useEffect(() => {
-        // Validate attempt_id
-        if (!attempt_id) {
-            message.error('Invalid quiz session');
-            navigate('/quizzes/available');
-            return;
-        }
-
-        // // Validate navigation source
-        // if (!locationState?.fromQuizList && !session) {
-        //     message.warning('Please start the quiz from the quiz list');
-        //     navigate('/quizzes/available', {
-        //         replace: true,
-        //         state: { error: 'Please start the quiz from the quiz list' }
-        //     });
-        // }
-
-        return () => {
-            resetSession();
-        };
-    }, [attempt_id, locationState, session, navigate, resetSession]);
 
     const handleQuizComplete = async (responses: unknown[]) => {
         setSubmitting(true);
