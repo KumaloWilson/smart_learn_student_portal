@@ -5,7 +5,7 @@ import { AnyObject } from 'antd/es/_util/type';
 export const apiService = {
     // Start a new quiz attempt
     startQuiz: async (requestBody: AnyObject) => {
-        const response = await axios.post(`${API_BASE_URL}/quiz/start`, requestBody);
+        const response = await axios.post(`${API_BASE_URL}/quiz/session/start`, requestBody);
         return response.data;
     },
 
@@ -30,20 +30,20 @@ export const apiService = {
     },
 
     // Fetch available quizzes
-    getQuizzes: async (filterType: string | undefined) => {
-        const response = await axios.get(`${API_BASE_URL}/quiz/available`);
+    getQuizzes: async () => {
+        const response = await axios.get(`${API_BASE_URL}/quiz/session/available`);
         return response.data;
     },
 
     // Fetch the responses submitted for a specific quiz attempt
     getAttemptResponses: async (attempt_id: string) => {
-        const response = await axios.get(`${API_BASE_URL}/quiz/responses/${attempt_id}`);
+        const response = await axios.get(`${API_BASE_URL}/quiz/responses/attempts/${attempt_id}/responses`);
         return response.data;
     },
 
 
     getQuizSession: async (attempt_id: string) => {
-        const response = await axios.get(`${API_BASE_URL}/quiz/responses/${attempt_id}`);
+        const response = await axios.get(`${API_BASE_URL}/quiz/session/current/${attempt_id}`);
         return response.data;
     }
 };

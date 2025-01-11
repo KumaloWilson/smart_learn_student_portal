@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
@@ -30,14 +30,14 @@ import { QuizList } from "./views/quiz/quiz_list";
 import QuizResult from "./views/quiz/quiz_result";
 import QuizSessionContainer from "./views/quiz/quiz_session_container";
 
-
 const queryClient = new QueryClient();
 const { Header, Content, Footer, Sider } = Layout;
 
+const STUDENT_ID = "student-123";
+
+
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedQuizView, setSelectedQuizView] = useState<string | null>(null);
-  const [attemptId, setAttemptId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [breadcrumbItems, setBreadcrumbItems] = useState(['Student Portal', 'Dashboard']);
 
@@ -122,7 +122,7 @@ const App: React.FC = () => {
     {
       key: "profile",
       icon: <UserOutlined />,
-      label: "My Profile"
+      label: "Profile"
     },
     {
       key: "help",
@@ -135,74 +135,66 @@ const App: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  const handleQuizStart = (attempt_id: string) => {
-    setAttemptId(attempt_id);
-    setSelectedQuizView('session');
-    setBreadcrumbItems(['Student Portal', 'Quizzes', 'Active Session']);
-  };
+  const MainContent: React.FC = () => {
+    const navigate = useNavigate();
 
-  const contentMap: Record<string, React.ReactNode> = {
-    dashboard: <div>Dasboard</div>,
-    profile: <div>Profile</div>,
-    available: (
-      <QuizList
-        studentId={""}
-        onQuizStart={handleQuizStart}
-      />
-    ),
-    attempts: <QuizList filterType="attempts" studentId={""} />,
-    results: (
-      selectedQuizView === 'result' && attemptId ? (
-        <QuizResult
-          attemptId={attemptId}
-          onBackToList={() => {
-            setSelectedQuizView(null);
-            setAttemptId(null);
-            setSelectedTab('available');
-            setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
-          }}
+    const handleQuizStart = (attempt_id: string) => {
+      navigate(`/quiz/session/${attempt_id}`, {
+        state: { fromQuizList: true }
+      });
+      setBreadcrumbItems(['Student Portal', 'Quizzes', 'Active Session']);
+    };
+
+    const contentMap: Record<string, React.ReactNode> = {
+      dashboard: <div>Dashboard Content</div>,
+      profile: <div>Profile Content</div>,
+      available: (
+        <QuizList
+          studentId={STUDENT_ID}
+          onQuizStart={handleQuizStart}
         />
-      ) : (
-        <QuizList filterType="completed" studentId={""} />
-      )
-    ),
-    progress: <div>Learning Progress Content</div>,
-    practice: <div>Practice Tests Content</div>,
-    enrolled: <div>Enrolled Courses Content</div>,
-    materials: <div>Course Materials Content</div>,
-    assignments: <div>Assignments Content</div>,
-    timetable: <div>Class Timetable Content</div>,
-    exams: <div>Exam Schedule Content</div>,
-    deadlines: <div>Assignment Deadlines Content</div>,
-    grades: <div>Grades & Marks Content</div>,
-    analytics: <div>Learning Analytics Content</div>,
-    feedback: <div>Instructor Feedback Content</div>,
-    library: <div>Digital Library Content</div>,
-    pastpapers: <div>Past Papers Content</div>,
-    studygroups: <div>Study Groups Content</div>,
-    announcements: <div>Announcements Content</div>,
-    messages: <div>Messages Content</div>,
-    discussions: <div>Discussion Forums Content</div>,
-    attendance: <div>Attendance Content</div>,
-    notifications: <div>Notifications Content</div>,
-    help: <div>Help & Support Content</div>
-  };
+      ),
+      attempts: <QuizList filterType="attempts" studentId={STUDENT_ID} />,
+      results: <QuizList filterType="completed" studentId={STUDENT_ID} />,
+      progress: <div>Learning Progress Content</div>,
+      practice: <div>Practice Tests Content</div>,
+      enrolled: <div>Enrolled Courses Content</div>,
+      materials: <div>Course Materials Content</div>,
+      assignments: <div>Assignments Content</div>,
+      timetable: <div>Class Timetable Content</div>,
+      exams: <div>Exam Schedule Content</div>,
+      deadlines: <div>Assignment Deadlines Content</div>,
+      grades: <div>Grades & Marks Content</div>,
+      analytics: <div>Learning Analytics Content</div>,
+      feedback: <div>Instructor Feedback Content</div>,
+      library: <div>Digital Library Content</div>,
+      pastpapers: <div>Past Papers Content</div>,
+      studygroups: <div>Study Groups Content</div>,
+      announcements: <div>Announcements Content</div>,
+      messages: <div>Messages Content</div>,
+      discussions: <div>Discussion Forums Content</div>,
+      attendance: <div>Attendance Content</div>,
+      notifications: <div>Notifications Content</div>,
+      help: <div>Help & Support Content</div>
+    };
 
-  const renderContent = () => {
-    if (selectedTab === 'available' && selectedQuizView === 'session' && attemptId) {
-      return (
-        <QuizSessionContainer />
-      );
+    const isQuizSession = location.pathname.includes('/quiz/session/');
+
+    if (isQuizSession) {
+      return null;
     }
 
-    const content = contentMap[selectedTab];
-    if (!content) {
-      return <Spin size="large" />;
-    }
-    return content;
+    return contentMap[selectedTab] || <Spin size="large" />;
   };
 
   const handleMenuClick: MenuProps['onClick'] = ({ key, keyPath }) => {
+    const location = window.location.pathname;
+
+    // If we're in a quiz session, don't allow menu navigation unless explicitly handling it
+    if (location.includes('/quiz/session/')) {
+      return;
+    }
+
     setSelectedTab(key);
 
     // Update breadcrumb based on menu selection
@@ -219,7 +211,6 @@ const App: React.FC = () => {
 
     // Add current selection to breadcrumb
     const selectedItem = items.find(item => item?.key === key);
-
     if (selectedItem && 'label' in selectedItem) {
       newBreadcrumb.push(selectedItem.label as string);
     } else {
@@ -227,12 +218,6 @@ const App: React.FC = () => {
     }
 
     setBreadcrumbItems(newBreadcrumb);
-
-    // Reset quiz view state when changing main menu items
-    if (key !== 'available') {
-      setSelectedQuizView(null);
-      setAttemptId(null);
-    }
   };
 
   return (
@@ -246,9 +231,9 @@ const App: React.FC = () => {
             style={{
               overflow: 'auto',
               height: '100vh',
-              width: '300',
               position: 'fixed',
               left: 0,
+              zIndex: 999
             }}
           >
             <div className="flex justify-center items-center p-4">
@@ -280,8 +265,8 @@ const App: React.FC = () => {
               width: '100%'
             }}>
               <Breadcrumb style={{ margin: "16px 24px" }}>
-                {breadcrumbItems.map((item, index) => (
-                  <Breadcrumb.Item key={index}>{item}</Breadcrumb.Item>
+                {breadcrumbItems.map((item) => (
+                  <Breadcrumb.Item key={item}>{item}</Breadcrumb.Item>
                 ))}
               </Breadcrumb>
             </Header>
@@ -293,7 +278,27 @@ const App: React.FC = () => {
                 borderRadius: 8,
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
               }}>
-                {renderContent()}
+                <Routes>
+                  <Route
+                    path="/quiz/session/:attempt_id"
+                    element={
+                      <QuizSessionContainer />
+                    }
+                  />
+                  <Route
+                    path="/quiz/result/:attempt_id"
+                    element={
+                      <QuizResult
+                        attemptId={STUDENT_ID}
+                        onBackToList={() => {
+                          setSelectedTab('available');
+                          setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
+                        }}
+                      />
+                    }
+                  />
+                  <Route path="/" element={<MainContent />} />
+                </Routes>
               </div>
             </Content>
             <Footer style={{

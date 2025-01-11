@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Typography, Spin, Empty, Button, Form, Modal, Select, InputNumber } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Row, Col, Typography, Spin, Empty, Button, Form, Modal, Select, InputNumber, message } from 'antd';
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { QuizCard } from '../../components/quiz/card';
 import { apiService } from '../../services/quiz_services/api';
 import { Quiz } from '../../models/quiz';
@@ -31,7 +31,11 @@ export const QuizList: React.FC<QuizListProps> = ({
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
     const [form] = Form.useForm();
+
+    // Loading indicator configuration
+    const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
     useEffect(() => {
         loadQuizzes();
@@ -39,9 +43,11 @@ export const QuizList: React.FC<QuizListProps> = ({
 
     const loadQuizzes = async () => {
         try {
-            const response = await apiService.getQuizzes(filterType);
-            setQuizzes(response.data);
+            setLoading(true);
+            const data = await apiService.getQuizzes();
+            setQuizzes(data);
         } catch (error) {
+            message.error('Failed to load quizzes. Please try again.');
             console.error(error);
         } finally {
             setLoading(false);
@@ -55,11 +61,13 @@ export const QuizList: React.FC<QuizListProps> = ({
             const response = await apiService.startQuiz({});
             onQuizStart(response.data.quizSession.attempt_id);
         } catch (error) {
+            message.error('Failed to start quiz. Please try again.');
             console.error(error);
         }
     };
 
     const handleCreateCustomQuiz = async (values: CustomQuizForm) => {
+        setIsCreatingQuiz(true);
         try {
             const requestBody = {
                 student_id: studentId,
@@ -82,25 +90,35 @@ export const QuizList: React.FC<QuizListProps> = ({
                 }
             };
 
-            const response = await apiService.startQuiz(requestBody);
+            const data = await apiService.startQuiz(requestBody);
 
-            if (response.data.attempt && onQuizStart) {
-                onQuizStart(response.data.attempt.quizSession.attempt_id);
+            if (data.attempt && onQuizStart) {
+                message.success('Quiz created successfully!');
+                onQuizStart(data.attempt.quizSession.attempt_id);
             }
 
             setIsModalVisible(false);
             form.resetFields();
         } catch (error) {
+            message.error('Failed to create custom quiz. Please try again.');
             console.error('Failed to create custom quiz:', error);
+        } finally {
+            setIsCreatingQuiz(false);
         }
     };
 
     const renderContent = () => {
-        if (loading) return <Spin size="large" />;
+        if (loading) {
+            return (
+                <div style={{ textAlign: 'center', padding: '50px 0' }}>
+                    <Spin indicator={antIcon} tip="Loading quizzes..." />
+                </div>
+            );
+        }
 
         if (!quizzes.length) {
             return (
-                <div className="text-center">
+                <div className="text-center" style={{ padding: '40px 0' }}>
                     <Empty
                         description={
                             filterType === 'attempts' ? 'No quiz attempts yet' :
@@ -114,6 +132,7 @@ export const QuizList: React.FC<QuizListProps> = ({
                             icon={<PlusOutlined />}
                             onClick={() => setIsModalVisible(true)}
                             className="mt-4"
+                            size="large"
                         >
                             Create Custom Quiz
                         </Button>
@@ -131,6 +150,7 @@ export const QuizList: React.FC<QuizListProps> = ({
                             icon={<PlusOutlined />}
                             onClick={() => setIsModalVisible(true)}
                             className="mb-4"
+                            size="large"
                         >
                             Create Custom Quiz
                         </Button>
@@ -161,20 +181,32 @@ export const QuizList: React.FC<QuizListProps> = ({
             <Modal
                 title="Create Custom Quiz"
                 open={isModalVisible}
-                onCancel={() => setIsModalVisible(false)}
+                onCancel={() => {
+                    if (!isCreatingQuiz) {
+                        setIsModalVisible(false);
+                        form.resetFields();
+                    }
+                }}
                 footer={null}
+                maskClosable={!isCreatingQuiz}
+                closable={!isCreatingQuiz}
             >
                 <Form
                     form={form}
                     onFinish={handleCreateCustomQuiz}
                     layout="vertical"
+                    disabled={isCreatingQuiz}
                 >
                     <Form.Item
                         name="topic"
                         label="Topic"
                         rules={[{ required: true, message: 'Please enter a topic' }]}
                     >
-                        <Select placeholder="Select topic">
+                        <Select
+                            placeholder="Select topic"
+                            showSearch
+                            optionFilterProp="children"
+                        >
                             <Option value="Mathematics">Mathematics</Option>
                             <Option value="Science">Science</Option>
                             <Option value="History">History</Option>
@@ -187,7 +219,12 @@ export const QuizList: React.FC<QuizListProps> = ({
                         name="subtopic"
                         label="Subtopic (Optional)"
                     >
-                        <Select placeholder="Select subtopic">
+                        <Select
+                            placeholder="Select subtopic"
+                            showSearch
+                            optionFilterProp="children"
+                            allowClear
+                        >
                             <Option value="Variables">Variables</Option>
                             <Option value="Functions">Functions</Option>
                             <Option value="Algorithms">Algorithms</Option>
@@ -216,8 +253,14 @@ export const QuizList: React.FC<QuizListProps> = ({
                     </Form.Item>
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" block>
-                            Create Quiz
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            block
+                            loading={isCreatingQuiz}
+                            disabled={isCreatingQuiz}
+                        >
+                            {isCreatingQuiz ? 'Creating Quiz...' : 'Create Quiz'}
                         </Button>
                     </Form.Item>
                 </Form>

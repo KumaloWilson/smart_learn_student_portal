@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { message, Spin, Result, Button, Modal } from 'antd';
+import { message, Spin, Result, Button, Modal, Progress, Space, Alert } from 'antd';
+import { LoadingOutlined, ExclamationCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { QuizSession } from '../../components/quiz/quiz_session';
 import { apiService } from '../../services/quiz_services/api';
 import { useQuizSession } from '../../hooks/quiz/quiz_session';
@@ -14,35 +15,60 @@ const QuizSessionContainer: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const locationState = location.state as LocationState;
+    const [submitting, setSubmitting] = useState(false);
+    const [submitProgress, setSubmitProgress] = useState(0);
 
     const {
         session,
         loading,
         error,
         resetSession
-    } = useQuizSession(attempt_id!);
+    } = useQuizSession(attempt_id || ''); // Provide empty string as fallback
+
+    // Custom loading spinner
+    const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
     useEffect(() => {
-        // Ensure the session is accessed properly through the quiz list
-        if (!locationState?.fromQuizList && !session) {
-            navigate('/quizzes/available', {
-                replace: true,
-                state: { error: 'Please start the quiz from the quiz list' }
-            });
+        // Validate attempt_id
+        if (!attempt_id) {
+            message.error('Invalid quiz session');
+            navigate('/quizzes/available');
+            return;
         }
 
-        // Cleanup function to reset session when unmounting
+        // // Validate navigation source
+        // if (!locationState?.fromQuizList && !session) {
+        //     message.warning('Please start the quiz from the quiz list');
+        //     navigate('/quizzes/available', {
+        //         replace: true,
+        //         state: { error: 'Please start the quiz from the quiz list' }
+        //     });
+        // }
+
         return () => {
             resetSession();
         };
-    }, [locationState, session, navigate, resetSession]);
+    }, [attempt_id, locationState, session, navigate, resetSession]);
 
     const handleQuizComplete = async (responses: unknown[]) => {
+        setSubmitting(true);
         try {
+            // Simulate progress for better UX
+            const progressInterval = setInterval(() => {
+                setSubmitProgress(prev => Math.min(prev + 10, 90));
+            }, 300);
+
             const result = await apiService.submitQuiz(attempt_id!, responses);
 
+            clearInterval(progressInterval);
+            setSubmitProgress(100);
+
             if (result.data.status === 'completed') {
-                message.success('Quiz submitted successfully!');
+                message.success({
+                    content: 'Quiz submitted successfully!',
+                    duration: 3,
+                    className: 'custom-success-message'
+                });
                 navigate(`/quiz/result/${attempt_id}`, {
                     state: { fromSession: true }
                 });
@@ -50,8 +76,15 @@ const QuizSessionContainer: React.FC = () => {
                 throw new Error('Quiz submission failed');
             }
         } catch (error) {
-            message.error('Failed to submit quiz. Please try again.');
+            message.error({
+                content: 'Failed to submit quiz. Please try again.',
+                duration: 5,
+                className: 'custom-error-message'
+            });
             console.error('Quiz submission error:', error);
+        } finally {
+            setSubmitting(false);
+            setSubmitProgress(0);
         }
     };
 
@@ -61,6 +94,7 @@ const QuizSessionContainer: React.FC = () => {
         student_answer: string;
         time_taken: number;
     }) => {
+        const hide = message.loading('Submitting answer...', 0);
         try {
             const response = await apiService.submitResponse(responseData);
 
@@ -68,10 +102,18 @@ const QuizSessionContainer: React.FC = () => {
                 throw new Error(response.data.message);
             }
 
-            message.success('Answer submitted successfully');
+            hide();
+            message.success({
+                content: 'Answer submitted successfully',
+                icon: <span>✓</span>
+            });
             return response.data;
         } catch (error) {
-            message.error('Failed to submit answer. Please try again.');
+            hide();
+            message.error({
+                content: 'Failed to submit answer. Please try again.',
+                duration: 5
+            });
             console.error('Response submission error:', error);
             throw error;
         }
@@ -80,8 +122,24 @@ const QuizSessionContainer: React.FC = () => {
     const handleExitQuiz = () => {
         Modal.confirm({
             title: 'Exit Quiz',
-            content: 'Are you sure you want to exit? Your progress will be lost.',
+            icon: <ExclamationCircleOutlined />,
+            content: (
+                <div>
+                    <p>Are you sure you want to exit?</p>
+                    <Alert
+                        message="Warning"
+                        description="Your progress will be lost and cannot be recovered."
+                        type="warning"
+                        showIcon
+                        className="mt-4"
+                    />
+                </div>
+            ),
+            okText: 'Yes, Exit Quiz',
+            cancelText: 'Continue Quiz',
+            okButtonProps: { danger: true },
             onOk: () => {
+                message.info('Exiting quiz...');
                 navigate('/quizzes/available', { replace: true });
             }
         });
@@ -89,8 +147,16 @@ const QuizSessionContainer: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <Spin size="large" tip="Loading quiz session..." />
+            <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+                <Space direction="vertical" align="center">
+                    <Spin indicator={antIcon} size="large" />
+                    <div className="mt-4 text-gray-600">
+                        Loading quiz session...
+                    </div>
+                    <div className="text-sm text-gray-400">
+                        <ClockCircleOutlined /> Please wait while we prepare your quiz
+                    </div>
+                </Space>
             </div>
         );
     }
@@ -106,6 +172,7 @@ const QuizSessionContainer: React.FC = () => {
                         type="primary"
                         key="back"
                         onClick={() => navigate('/quizzes/available')}
+                        size="large"
                     >
                         Back to Quiz List
                     </Button>
@@ -125,6 +192,7 @@ const QuizSessionContainer: React.FC = () => {
                         type="primary"
                         key="back"
                         onClick={() => navigate('/quizzes/available')}
+                        size="large"
                     >
                         Go to Quiz List
                     </Button>
@@ -134,20 +202,49 @@ const QuizSessionContainer: React.FC = () => {
     }
 
     return (
-        <div className="quiz-session-container">
+        <div className="quiz-session-container p-4">
+            {submitting && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                        <Progress
+                            percent={submitProgress}
+                            status="active"
+                            strokeColor={{
+                                '0%': '#108ee9',
+                                '100%': '#87d068',
+                            }}
+                        />
+                        <p className="text-center mt-4">Submitting your quiz...</p>
+                    </div>
+                </div>
+            )}
+
+            <Alert
+                message="Quiz in Progress"
+                description="Take your time and read each question carefully. Good luck!"
+                type="info"
+                showIcon
+                className="mb-4"
+            />
+
             <QuizSession
                 attempt_id={attempt_id!}
                 initialQuestions={session.questions}
                 onQuizComplete={handleQuizComplete}
                 onSubmitResponse={handleSubmitResponse}
             />
-            <Button
-                danger
-                className="mt-4"
-                onClick={handleExitQuiz}
-            >
-                Exit Quiz
-            </Button>
+
+            <div className="fixed bottom-4 right-4">
+                <Button
+                    danger
+                    size="large"
+                    icon={<ExclamationCircleOutlined />}
+                    onClick={handleExitQuiz}
+                    className="shadow-lg"
+                >
+                    Exit Quiz
+                </Button>
+            </div>
         </div>
     );
 };
