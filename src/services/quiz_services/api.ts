@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../../configs/config';
+import { AnyObject } from 'antd/es/_util/type';
 
 export const apiService = {
     // Start a new quiz attempt
-    startQuiz: async (quiz_id: string) => {
-        const response = await axios.post(`${API_BASE_URL}/quiz/start`, { quiz_id });
+    startQuiz: async (requestBody: AnyObject) => {
+        const response = await axios.post(`${API_BASE_URL}/quiz/start`, requestBody);
         return response.data;
     },
 
@@ -36,6 +37,12 @@ export const apiService = {
 
     // Fetch the responses submitted for a specific quiz attempt
     getAttemptResponses: async (attempt_id: string) => {
+        const response = await axios.get(`${API_BASE_URL}/quiz/responses/${attempt_id}`);
+        return response.data;
+    },
+
+
+    getQuizSession: async (attempt_id: string) => {
         const response = await axios.get(`${API_BASE_URL}/quiz/responses/${attempt_id}`);
         return response.data;
     }

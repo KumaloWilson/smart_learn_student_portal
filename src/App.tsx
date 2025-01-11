@@ -28,7 +28,7 @@ import type { MenuProps } from "antd";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { QuizList } from "./views/quiz/quiz_list";
 import QuizResult from "./views/quiz/quiz_result";
-import QuizSession from "./views/quiz/quiz_session";
+import QuizSessionContainer from "./views/quiz/quiz_session_container";
 
 
 const queryClient = new QueryClient();
@@ -141,21 +141,16 @@ const App: React.FC = () => {
     setBreadcrumbItems(['Student Portal', 'Quizzes', 'Active Session']);
   };
 
-  const handleQuizComplete = (attempt_id: string) => {
-    setAttemptId(attempt_id);
-    setSelectedQuizView('result');
-    setBreadcrumbItems(['Student Portal', 'Quizzes', 'Quiz Result']);
-  };
-
   const contentMap: Record<string, React.ReactNode> = {
     dashboard: <div>Dasboard</div>,
     profile: <div>Profile</div>,
     available: (
       <QuizList
+        studentId={""}
         onQuizStart={handleQuizStart}
       />
     ),
-    attempts: <QuizList filterType="attempts" />,
+    attempts: <QuizList filterType="attempts" studentId={""} />,
     results: (
       selectedQuizView === 'result' && attemptId ? (
         <QuizResult
@@ -168,7 +163,7 @@ const App: React.FC = () => {
           }}
         />
       ) : (
-        <QuizList filterType="completed" />
+        <QuizList filterType="completed" studentId={""} />
       )
     ),
     progress: <div>Learning Progress Content</div>,
@@ -196,10 +191,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (selectedTab === 'available' && selectedQuizView === 'session' && attemptId) {
       return (
-        <QuizSession
-          attemptId={attemptId}
-          onComplete={handleQuizComplete}
-        />
+        <QuizSessionContainer />
       );
     }
 
@@ -226,13 +218,13 @@ const App: React.FC = () => {
     }
 
     // Add current selection to breadcrumb
-    const selectedItem = items.find(item =>
-      item && 'children' in item && item.children?.some(child => child?.key === key)
-    )?.children?.find(child => child.key === key);
+    const selectedItem = items.find(item => item?.key === key);
 
-    newBreadcrumb.push(selectedItem?.label as string ||
-      items.find(item => item?.key === key)?.label as string ||
-      key.charAt(0).toUpperCase() + key.slice(1));
+    if (selectedItem && 'label' in selectedItem) {
+      newBreadcrumb.push(selectedItem.label as string);
+    } else {
+      newBreadcrumb.push(key.charAt(0).toUpperCase() + key.slice(1));
+    }
 
     setBreadcrumbItems(newBreadcrumb);
 
@@ -254,15 +246,16 @@ const App: React.FC = () => {
             style={{
               overflow: 'auto',
               height: '100vh',
+              width: '300',
               position: 'fixed',
               left: 0,
             }}
           >
             <div className="flex justify-center items-center p-4">
               <img
-                src="/logo.jpeg"
+                src="/src/assets/logo.jpeg"
                 alt="Student"
-                className="w-16 h-16 rounded-full border-2 border-white"
+                className="w-20 h-20 rounded-full border-2 border-white"
               />
             </div>
             <div className="text-white text-center py-2 font-semibold">
