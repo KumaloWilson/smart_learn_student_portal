@@ -3,7 +3,7 @@ import { useParams, useNavigate, } from 'react-router-dom';
 import { message, Spin, Result, Button, Modal, Progress, Space, Alert } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { QuizSession } from '../../components/quiz/quiz_session';
-import { apiService } from '../../services/quiz_services/api';
+import { quizAPI } from '../../services/quiz_services/api';
 import { useQuizSession } from '../../hooks/quiz/quiz_session';
 import { QuestionResponse } from '../../models/quiz_question_response';
 
@@ -26,31 +26,35 @@ const QuizSessionContainer: React.FC = () => {
 
 
     const handleQuizComplete = async (responses: QuestionResponse[]) => {
-
-        console.log(responses);
-
+        console.table(responses);
         setSubmitting(true);
+
         try {
             // Simulate progress for better UX
             const progressInterval = setInterval(() => {
                 setSubmitProgress(prev => Math.min(prev + 10, 90));
             }, 300);
 
-            const response = await apiService.submitQuiz(attempt_id!, responses);
-
-            console.log(response);
+            const apiResponse = await quizAPI.submitQuiz(attempt_id!, responses);
+            console.table(apiResponse);
 
             clearInterval(progressInterval);
             setSubmitProgress(100);
 
-            if (response.data.success === true) {
+            // Check success at the top level of the response
+            if (apiResponse.success === true) {
                 message.success({
                     content: 'Quiz submitted successfully!',
                     duration: 3,
                     className: 'custom-success-message'
                 });
+
                 navigate(`/quiz/result/${attempt_id}`, {
-                    state: { fromSession: true }
+                    state: {
+                        fromSession: true,
+                        score: apiResponse.data.score,
+                        detailedResponses: apiResponse.data.detailedResponses
+                    }
                 });
             } else {
                 throw new Error('Quiz submission failed');
@@ -67,6 +71,7 @@ const QuizSessionContainer: React.FC = () => {
             setSubmitProgress(0);
         }
     };
+
 
     const handleExitQuiz = () => {
         Modal.confirm({
@@ -178,7 +183,7 @@ const QuizSessionContainer: React.FC = () => {
 
             <QuizSession
                 attempt_id={attempt_id!}
-                initialQuestions={session.questions}
+                questions={session.questions}
                 onQuizComplete={handleQuizComplete}
             />
 

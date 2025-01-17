@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Table, Progress, Space, Button, Spin, Row, Col } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { apiService } from '../../services/quiz_services/api';
+import { quizAPI } from '../../services/quiz_services/api';
 
 const { Title, Text } = Typography;
 
@@ -35,7 +35,7 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
         const fetchResult = async () => {
             setLoading(true);
             try {
-                const response = await apiService.getAttemptResponses(attemptId);
+                const response = await quizAPI.getAttemptResponses(attemptId);
                 setResult(response.data);
             } catch (error) {
                 console.error('Error loading quiz result:', error);

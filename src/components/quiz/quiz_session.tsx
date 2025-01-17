@@ -8,13 +8,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface QuizSessionProps {
     attempt_id: string;
-    initialQuestions?: Question[];
+    questions?: Question[];
     onQuizComplete: (responses: QuestionResponse[]) => void;
 }
 
 export const QuizSession: React.FC<QuizSessionProps> = ({
     attempt_id,
-    initialQuestions = [],
+    questions: initialQuestions = [],
     onQuizComplete,
 }) => {
     const [session, setSession] = useState({
@@ -103,7 +103,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
         if (!currentQuestion) throw new Error('No current question available');
 
         // Calculate time taken, ensuring it's a valid number
-        const timeTaken = Math.max(0, currentQuestion.time_estimate - remainingTime);
+        //const timeTaken = Math.max(0, currentQuestion.time_estimate - remainingTime);
 
         return {
             response_id: uuidv4(),
@@ -111,7 +111,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
             question_id: currentQuestion.question_id,
             student_answer: answer || '',
             is_correct: answer === currentQuestion.correct_answer,
-            time_taken: timeTaken, // This will now be a valid number
+            time_taken: 10, //timeTaken, // This will now be a valid number
             points_earned: answer === currentQuestion.correct_answer ? currentQuestion.points : 0,
             feedback: answer === currentQuestion.correct_answer
                 ? 'Correct!'

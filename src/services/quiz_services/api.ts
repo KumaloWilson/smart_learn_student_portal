@@ -2,23 +2,13 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../configs/config';
 import { AnyObject } from 'antd/es/_util/type';
 
-export const apiService = {
+export const quizAPI = {
     // Start a new quiz attempt
     startQuiz: async (requestBody: AnyObject) => {
         const response = await axios.post(`${API_BASE_URL}/quiz/session/start`, requestBody);
         return response.data;
     },
 
-    // Submit a response for a specific question in the quiz attempt
-    submitResponse: async (responseData: {
-        attempt_id: string;
-        question_id: string;
-        student_answer: string;
-        time_taken: number;
-    }) => {
-        const response = await axios.post(`${API_BASE_URL}/quiz/responses`, responseData);
-        return response.data;
-    },
 
     // Submit the complete set of responses for the quiz attempt
     submitQuiz: async (attempt_id: string, responses: unknown[]) => {

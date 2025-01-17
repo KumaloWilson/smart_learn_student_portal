@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../../services/quiz_services/api';
+import { quizAPI } from '../../services/quiz_services/api';
 import { Question } from '../../models/quiz_question';
 
 interface QuizSession {
@@ -32,7 +32,7 @@ export const useQuizSession = (attempt_id: string): QuizSessionHook => {
             setLoading(true);
             setError(null);
 
-            const response = await apiService.getQuizSession(attempt_id);
+            const response = await quizAPI.getQuizSession(attempt_id);
 
             if (!response.data) {
                 throw new Error('No session data received');

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Row, Col, Typography, Spin, Empty, Button, Form, Modal, Select, InputNumber, message } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { QuizCard } from '../../components/quiz/quiz_card';
-import { apiService } from '../../services/quiz_services/api';
+import { quizAPI } from '../../services/quiz_services/api';
 import { Quiz } from '../../models/quiz';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -44,7 +44,7 @@ export const QuizList: React.FC<QuizListProps> = ({
     const loadQuizzes = async () => {
         try {
             setLoading(true);
-            const data = await apiService.getQuizzes();
+            const data = await quizAPI.getQuizzes();
             setQuizzes(data);
         } catch (error) {
             message.error('Failed to load quizzes. Please try again.');
@@ -58,7 +58,7 @@ export const QuizList: React.FC<QuizListProps> = ({
         if (!onQuizStart) return;
 
         try {
-            const response = await apiService.startQuiz({});
+            const response = await quizAPI.startQuiz({});
             onQuizStart(response.data.quizSession.attempt_id);
         } catch (error) {
             message.error('Failed to start quiz. Please try again.');
@@ -90,7 +90,7 @@ export const QuizList: React.FC<QuizListProps> = ({
                 }
             };
 
-            const data = await apiService.startQuiz(requestBody);
+            const data = await quizAPI.startQuiz(requestBody);
 
             if (data.attempt && onQuizStart) {
                 message.success('Quiz created successfully!');
