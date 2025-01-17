@@ -1,11 +1,9 @@
+import {Question} from "./quiz_question.ts";
+
 export interface QuizSession {
+    questions: Question[];
     attempt_id: string;
-    quiz_id: string;
-    student_id: string;
-    start_time: Date;
-    end_time?: Date;
-    current_question_index: number;
-    remaining_time: number;
-    status: 'in_progress' | 'completed' | 'abandoned' | 'timed_out';
-    score?: number;
+    start_time: string;
+    end_time?: string;
+    status: 'active' | 'completed' | 'expired';
 }

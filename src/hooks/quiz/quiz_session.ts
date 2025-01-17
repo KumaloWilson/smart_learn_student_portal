@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { quizAPI } from '../../services/quiz_services/api';
-import { Question } from '../../models/quiz_question';
-
-interface QuizSession {
-    questions: Question[];
-    attempt_id: string;
-    start_time: string;
-    end_time?: string;
-    status: 'active' | 'completed' | 'expired';
-}
+import {QuizSession} from "../../models/quiz_session.ts";
 
 interface QuizSessionHook {
     session: QuizSession | null;
