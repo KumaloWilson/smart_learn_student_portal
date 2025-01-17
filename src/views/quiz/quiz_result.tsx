@@ -1,42 +1,53 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Card, Typography, Table, Progress, Space, Button, Spin, Row, Col } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { quizAPI } from '../../services/quiz_services/api';
+import { QuizResult } from '../../models/quiz_result';
+import { QuestionResponse } from '../../models/quiz_question_response';
 
 const { Title, Text } = Typography;
 
-interface Result {
-    score: number;
-    statistics: {
-        total_questions: number;
-        correct_answers: number;
-        avg_time_per_question: number;
-    };
-    responses: {
-        question_id: string;
-        text: string;
-        student_answer: string;
-        correct_answer: string;
-        is_correct: boolean;
-        points_earned: number;
-    }[];
-}
-
 interface QuizResultProps {
-    attemptId: string;
     onBackToList: () => void;
 }
 
-const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
-    const [result, setResult] = useState<Result | null>(null);
+const AttemptedQuizResults: React.FC<QuizResultProps> = ({ onBackToList }) => {
+    const { attempt_id } = useParams();
+    const [result, setResult] = useState<QuizResult | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchResult = async () => {
+            if (!attempt_id) return;
+
             setLoading(true);
             try {
-                const response = await quizAPI.getAttemptResponses(attemptId);
-                setResult(response.data);
+                const response = await quizAPI.getAttemptResponses(attempt_id);
+
+                if (response.data) {
+
+                    console.table(response.data.responses)
+
+                    // Transform the API response to match the expected QuizResult structure
+                    const transformedResult: QuizResult = {
+                        score: parseFloat(response.data.score) || 0,
+                        statistics: {
+                            total_questions: response.data.statistics?.[0]?.total_questions || 0,
+                            correct_answers: parseInt(response.data.statistics?.[0]?.correct_answers?.toString() || '0'),
+                            avg_time_per_question: response.data.statistics?.[0]?.avg_time_per_question || 0
+                        },
+                        responses: response.data.responses.map((resp: any) => ({
+                            question_id: resp.question_id,
+                            text: resp.text,
+                            student_answer: resp.student_answer,
+                            correct_answer: resp.correct_answer,
+                            is_correct: resp.is_correct,
+                            points_earned: parseFloat(resp.points_earned?.toString() || '0')
+                        }))
+                    };
+                    setResult(transformedResult);
+                }
             } catch (error) {
                 console.error('Error loading quiz result:', error);
             } finally {
@@ -45,7 +56,7 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
         };
 
         fetchResult();
-    }, [attemptId]);
+    }, [attempt_id]);
 
     if (loading) {
         return (
@@ -55,7 +66,7 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
         );
     }
 
-    if (!result) {
+    if (!result || !attempt_id) {
         return (
             <Card>
                 <Text>No result data available</Text>
@@ -86,7 +97,7 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
             title: 'Result',
             key: 'result',
             width: '20%',
-            render: (record: Result['responses'][0]) => (
+            render: (record: QuestionResponse) => (
                 <Space>
                     {record.is_correct ? (
                         <CheckCircleOutlined style={{ color: '#52c41a' }} />
@@ -137,10 +148,7 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
                 />
 
                 <div className="flex justify-end">
-                    <Button
-                        type="primary"
-                        onClick={onBackToList}
-                    >
+                    <Button type="primary" onClick={onBackToList}>
                         Back to Quiz List
                     </Button>
                 </div>
@@ -149,4 +157,4 @@ const QuizResult: React.FC<QuizResultProps> = ({ attemptId, onBackToList }) => {
     );
 };
 
-export default QuizResult;
+export default AttemptedQuizResults;

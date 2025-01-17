@@ -26,7 +26,6 @@ const QuizSessionContainer: React.FC = () => {
 
 
     const handleQuizComplete = async (responses: QuestionResponse[]) => {
-        console.table(responses);
         setSubmitting(true);
 
         try {
@@ -36,7 +35,6 @@ const QuizSessionContainer: React.FC = () => {
             }, 300);
 
             const apiResponse = await quizAPI.submitQuiz(attempt_id!, responses);
-            console.table(apiResponse);
 
             clearInterval(progressInterval);
             setSubmitProgress(100);

@@ -27,7 +27,7 @@ import { Layout, Menu, Breadcrumb, theme, Spin } from "antd";
 import type { MenuProps } from "antd";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { QuizList } from "./views/quiz/quiz_list";
-import QuizResult from "./views/quiz/quiz_result";
+import AttemptedQuizResults from "./views/quiz/quiz_result";
 import QuizSessionContainer from "./views/quiz/quiz_session_container";
 
 const queryClient = new QueryClient();
@@ -285,11 +285,11 @@ const App: React.FC = () => {
                       <QuizSessionContainer />
                     }
                   />
+
                   <Route
                     path="/quiz/result/:attempt_id"
                     element={
-                      <QuizResult
-                        attemptId={STUDENT_ID}
+                      <AttemptedQuizResults
                         onBackToList={() => {
                           setSelectedTab('available');
                           setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
@@ -297,6 +297,7 @@ const App: React.FC = () => {
                       />
                     }
                   />
+
                   <Route path="/" element={<MainContent />} />
                 </Routes>
               </div>
