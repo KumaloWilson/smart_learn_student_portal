@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
@@ -23,23 +23,42 @@ import {
   BulbOutlined,
   RocketOutlined
 } from "@ant-design/icons";
-import { Layout, Menu, Breadcrumb, theme, Spin } from "antd";
+import { Layout, Menu, theme, Spin } from "antd";
 import type { MenuProps } from "antd";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { QuizList } from "./views/quiz/quiz_list";
 import AttemptedQuizResults from "./views/quiz/quiz_result";
 import QuizSessionContainer from "./views/quiz/quiz_session_container";
+import Dashboard from "./views/dashboard/dashboard.tsx";
+import ProfileHeader from "./components/profile/profile_header.tsx";
+import LoginPage from "./views/auth/login_page.tsx";
+import {useAuth} from "./hooks/auth/auth.ts";
 
 const queryClient = new QueryClient();
-const { Header, Content, Footer, Sider } = Layout;
+const {  Content, Footer, Sider } = Layout;
 
-const STUDENT_ID = "student-123";
+
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+        <div className="h-screen w-screen flex items-center justify-center">
+          <Spin size="large" />
+        </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+};
 
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [breadcrumbItems, setBreadcrumbItems] = useState(['Student Portal', 'Dashboard']);
+  const { loading, student } = useAuth();
+
 
   const items: MenuProps["items"] = [
     {
@@ -146,16 +165,16 @@ const App: React.FC = () => {
     };
 
     const contentMap: Record<string, React.ReactNode> = {
-      dashboard: <div>Dashboard Content</div>,
+      dashboard: <Dashboard/>,
       profile: <div>Profile Content</div>,
       available: (
         <QuizList
-          studentId={STUDENT_ID}
+          studentId={student!.student_id!}
           onQuizStart={handleQuizStart}
         />
       ),
-      attempts: <QuizList filterType="attempts" studentId={STUDENT_ID} />,
-      results: <QuizList filterType="completed" studentId={STUDENT_ID} />,
+      attempts: <QuizList filterType="attempts" studentId={student!.student_id!} />,
+      results: <QuizList filterType="completed" studentId={student!.student_id!} />,
       progress: <div>Learning Progress Content</div>,
       practice: <div>Practice Tests Content</div>,
       enrolled: <div>Enrolled Courses Content</div>,
@@ -220,98 +239,101 @@ const App: React.FC = () => {
     setBreadcrumbItems(newBreadcrumb);
   };
 
+  if (loading) {
+    return (
+        <div className="h-screen w-screen flex items-center justify-center">
+          <Spin size="large" />
+        </div>
+    );
+  }
+
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Layout style={{ minHeight: "100vh" }}>
-          <Sider
-            collapsible
-            collapsed={collapsed}
-            onCollapse={(value) => setCollapsed(value)}
-            style={{
-              overflow: 'auto',
-              height: '100vh',
-              position: 'fixed',
-              left: 0,
-              zIndex: 999
-            }}
-          >
-            <div className="flex justify-center items-center p-4">
-              <img
-                src="/src/assets/logo.jpeg"
-                alt="Student"
-                className="w-20 h-20 rounded-full border-2 border-white"
-              />
-            </div>
-            <div className="text-white text-center py-2 font-semibold">
-              {!collapsed && "Student Portal"}
-            </div>
-            <Menu
-              theme="dark"
-              defaultSelectedKeys={["dashboard"]}
-              mode="inline"
-              items={items}
-              onClick={handleMenuClick}
-              selectedKeys={[selectedTab]}
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+                path="/*"
+                element={
+                  <PrivateRoute>
+                    <Layout style={{ minHeight: "100vh" }}>
+                      <Sider
+                          collapsible
+                          collapsed={collapsed}
+                          onCollapse={(value) => setCollapsed(value)}
+                          style={{
+                            overflow: 'auto',
+                            height: '100vh',
+                            position: 'fixed',
+                            left: 0,
+                            zIndex: 999
+                          }}
+                      >
+                        <div className="flex justify-center items-center p-4">
+                          <img
+                              src="/src/assets/logo.jpeg"
+                              alt="Student"
+                              className="w-20 h-20 rounded-full border-2 border-white"
+                          />
+                        </div>
+                        <div className="text-white text-center py-2 font-semibold">
+                          {!collapsed && "Student Portal"}
+                        </div>
+                        <Menu
+                            theme="dark"
+                            defaultSelectedKeys={["dashboard"]}
+                            mode="inline"
+                            items={items}
+                            onClick={handleMenuClick}
+                            selectedKeys={[selectedTab]}
+                        />
+                      </Sider>
+                      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
+                        <ProfileHeader breadcrumbItems={breadcrumbItems} />
+                        <Content style={{ margin: "24px 16px 0", overflow: 'initial' }}>
+                          <div style={{
+                            padding: 24,
+                            minHeight: 360,
+                            background: colorBgContainer,
+                            borderRadius: 8,
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            <Routes>
+                              <Route path="/dashboard" element={<MainContent />} />
+                              <Route
+                                  path="/quiz/session/:attempt_id"
+                                  element={<QuizSessionContainer />}
+                              />
+                              <Route
+                                  path="/quiz/result/:attempt_id"
+                                  element={
+                                    <AttemptedQuizResults
+                                        onBackToList={() => {
+                                          setSelectedTab('available');
+                                          setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
+                                        }}
+                                    />
+                                  }
+                              />
+                              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                            </Routes>
+                          </div>
+                        </Content>
+                        <Footer style={{
+                          textAlign: "center",
+                          background: colorBgContainer
+                        }}>
+                          LearnSmart Student Portal ©{new Date().getFullYear()}
+                        </Footer>
+                      </Layout>
+                    </Layout>
+                  </PrivateRoute>
+                }
             />
-          </Sider>
-          <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
-            <Header style={{
-              padding: 0,
-              background: colorBgContainer,
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              width: '100%'
-            }}>
-              <Breadcrumb style={{ margin: "16px 24px" }}>
-                {breadcrumbItems.map((item) => (
-                  <Breadcrumb.Item key={item}>{item}</Breadcrumb.Item>
-                ))}
-              </Breadcrumb>
-            </Header>
-            <Content style={{ margin: "24px 16px 0", overflow: 'initial' }}>
-              <div style={{
-                padding: 24,
-                minHeight: 360,
-                background: colorBgContainer,
-                borderRadius: 8,
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-              }}>
-                <Routes>
-                  <Route
-                    path="/quiz/session/:attempt_id"
-                    element={
-                      <QuizSessionContainer />
-                    }
-                  />
-
-                  <Route
-                    path="/quiz/result/:attempt_id"
-                    element={
-                      <AttemptedQuizResults
-                        onBackToList={() => {
-                          setSelectedTab('available');
-                          setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
-                        }}
-                      />
-                    }
-                  />
-
-                  <Route path="/" element={<MainContent />} />
-                </Routes>
-              </div>
-            </Content>
-            <Footer style={{
-              textAlign: "center",
-              background: colorBgContainer
-            }}>
-              LearnSmart Student Portal ©{new Date().getFullYear()}
-            </Footer>
-          </Layout>
-        </Layout>
-      </Router>
-    </QueryClientProvider>
+          </Routes>
+        </Router>
+      </QueryClientProvider>
   );
 };
 
