@@ -10,7 +10,6 @@ import {
   UserOutlined,
   FileProtectOutlined,
   QuestionCircleOutlined,
-  BookFilled,
   ClockCircleOutlined,
   FormOutlined,
   CheckCircleOutlined,
@@ -19,7 +18,6 @@ import {
   TeamOutlined,
   BellOutlined,
   ReadOutlined,
-  ContainerOutlined,
   BulbOutlined,
   RocketOutlined
 } from "@ant-design/icons";
@@ -32,10 +30,11 @@ import QuizSessionContainer from "./views/quiz/quiz_session_container";
 import Dashboard from "./views/dashboard/dashboard.tsx";
 import ProfileHeader from "./components/profile/profile_header.tsx";
 import LoginPage from "./views/auth/login_page.tsx";
-import {useAuth} from "./hooks/auth/auth.ts";
+import { useAuth } from "./hooks/auth/auth.ts";
+import { CourseDashboard } from "./views/my_courses/my_courses.tsx";
 
 const queryClient = new QueryClient();
-const {  Content, Footer, Sider } = Layout;
+const { Content, Footer, Sider } = Layout;
 
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -43,9 +42,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   if (loading) {
     return (
-        <div className="h-screen w-screen flex items-center justify-center">
-          <Spin size="large" />
-        </div>
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Spin size="large" />
+      </div>
     );
   }
 
@@ -68,13 +67,8 @@ const App: React.FC = () => {
     },
     {
       key: "courses",
-      icon: <BookOutlined />,
       label: "My Courses",
-      children: [
-        { key: "enrolled", label: "Enrolled Courses", icon: <BookFilled /> },
-        { key: "materials", label: "Course Materials", icon: <ContainerOutlined /> },
-        { key: "assignments", label: "Assignments", icon: <FormOutlined /> }
-      ]
+      icon: <BookOutlined />,
     },
     {
       key: "quizzes",
@@ -165,8 +159,10 @@ const App: React.FC = () => {
     };
 
     const contentMap: Record<string, React.ReactNode> = {
-      dashboard: <Dashboard/>,
+      dashboard: <Dashboard />,
       profile: <div>Profile Content</div>,
+      courses: <CourseDashboard />,
+      history: <div>Enrolled Courses Content</div>,
       available: (
         <QuizList
           studentId={student!.student_id!}
@@ -176,9 +172,6 @@ const App: React.FC = () => {
       attempts: <QuizList filterType="attempts" studentId={student!.student_id!} />,
       results: <QuizList filterType="completed" studentId={student!.student_id!} />,
       progress: <div>Learning Progress Content</div>,
-      practice: <div>Practice Tests Content</div>,
-      enrolled: <div>Enrolled Courses Content</div>,
-      materials: <div>Course Materials Content</div>,
       assignments: <div>Assignments Content</div>,
       timetable: <div>Class Timetable Content</div>,
       exams: <div>Exam Schedule Content</div>,
@@ -241,99 +234,101 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-        <div className="h-screen w-screen flex items-center justify-center">
-          <Spin size="large" />
-        </div>
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Spin size="large" />
+      </div>
     );
   }
 
 
   return (
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-                path="/*"
-                element={
-                  <PrivateRoute>
-                    <Layout style={{ minHeight: "100vh" }}>
-                      <Sider
-                          collapsible
-                          collapsed={collapsed}
-                          onCollapse={(value) => setCollapsed(value)}
-                          style={{
-                            overflow: 'auto',
-                            height: '100vh',
-                            position: 'fixed',
-                            left: 0,
-                            zIndex: 999
-                          }}
-                      >
-                        <div className="flex justify-center items-center p-4">
-                          <img
-                              src="/src/assets/logo.jpeg"
-                              alt="Student"
-                              className="w-20 h-20 rounded-full border-2 border-white"
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/*"
+            element={
+              <PrivateRoute>
+                <Layout style={{ minHeight: "100vh" }}>
+                  <Sider
+                    collapsible
+                    collapsed={collapsed}
+                    onCollapse={(value) => setCollapsed(value)}
+                    style={{
+                      overflow: 'auto',
+                      height: '100vh',
+                      position: 'fixed',
+                      left: 0,
+                      zIndex: 999
+                    }}
+                  >
+                    <div className="flex justify-center items-center p-4">
+                      <img
+                        src="/src/assets/logo.jpeg"
+                        alt="Student"
+                        className="w-20 h-20 rounded-full border-2 border-white"
+                      />
+                    </div>
+                    <div className="text-white text-center py-2 font-semibold">
+                      {!collapsed && "Student Portal"}
+                    </div>
+                    <Menu
+                      theme="dark"
+                      defaultSelectedKeys={["dashboard"]}
+                      mode="inline"
+                      items={items}
+                      onClick={handleMenuClick}
+                      selectedKeys={[selectedTab]}
+                    />
+                  </Sider>
+                  <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
+                    <ProfileHeader breadcrumbItems={breadcrumbItems} />
+                    <Content style={{ margin: "24px 16px 0", overflow: 'initial' }}>
+                      <div style={{
+                        padding: 24,
+                        minHeight: 360,
+                        background: colorBgContainer,
+                        borderRadius: 8,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <Routes>
+                          <Route path="/dashboard" element={<MainContent />} />
+                          <Route path="/courses" element={<CourseDashboard />} />
+                          {/* <Route path="/courses/:courseId" element={<CourseDetails />} /> */}
+                          <Route
+                            path="/quiz/session/:attempt_id"
+                            element={<QuizSessionContainer />}
                           />
-                        </div>
-                        <div className="text-white text-center py-2 font-semibold">
-                          {!collapsed && "Student Portal"}
-                        </div>
-                        <Menu
-                            theme="dark"
-                            defaultSelectedKeys={["dashboard"]}
-                            mode="inline"
-                            items={items}
-                            onClick={handleMenuClick}
-                            selectedKeys={[selectedTab]}
-                        />
-                      </Sider>
-                      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
-                        <ProfileHeader breadcrumbItems={breadcrumbItems} />
-                        <Content style={{ margin: "24px 16px 0", overflow: 'initial' }}>
-                          <div style={{
-                            padding: 24,
-                            minHeight: 360,
-                            background: colorBgContainer,
-                            borderRadius: 8,
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                          }}>
-                            <Routes>
-                              <Route path="/dashboard" element={<MainContent />} />
-                              <Route
-                                  path="/quiz/session/:attempt_id"
-                                  element={<QuizSessionContainer />}
+                          <Route
+                            path="/quiz/result/:attempt_id"
+                            element={
+                              <AttemptedQuizResults
+                                onBackToList={() => {
+                                  setSelectedTab('available');
+                                  setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
+                                }}
                               />
-                              <Route
-                                  path="/quiz/result/:attempt_id"
-                                  element={
-                                    <AttemptedQuizResults
-                                        onBackToList={() => {
-                                          setSelectedTab('available');
-                                          setBreadcrumbItems(['Student Portal', 'Quizzes', 'Available Quizzes']);
-                                        }}
-                                    />
-                                  }
-                              />
-                              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                            </Routes>
-                          </div>
-                        </Content>
-                        <Footer style={{
-                          textAlign: "center",
-                          background: colorBgContainer
-                        }}>
-                          LearnSmart Student Portal ©{new Date().getFullYear()}
-                        </Footer>
-                      </Layout>
-                    </Layout>
-                  </PrivateRoute>
-                }
-            />
-          </Routes>
-        </Router>
-      </QueryClientProvider>
+                            }
+                          />
+                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                      </div>
+                    </Content>
+                    <Footer style={{
+                      textAlign: "center",
+                      background: colorBgContainer
+                    }}>
+                      LearnSmart Student Portal ©{new Date().getFullYear()}
+                    </Footer>
+                  </Layout>
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </QueryClientProvider>
   );
 };
 

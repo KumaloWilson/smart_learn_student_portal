@@ -3,12 +3,12 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
-import {Student} from "../../models/student.ts";
-import {API_BASE_URL} from "../../configs/config.ts";
+import { API_BASE_URL } from "../../configs/config.ts";
+import { StudentAcademicProfile } from '../../models/student_academic_profile.ts';
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    student: Student | null;
+    student: StudentAcademicProfile | null;
     loading: boolean;
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
@@ -19,7 +19,7 @@ interface AuthContextType {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [student, setStudent] = useState<Student | null>(null);
+    const [student, setStudent] = useState<StudentAcademicProfile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchStudentData = async (studentId: string) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/student/${studentId}`, {
+            const response = await axios.get(`${API_BASE_URL}/student/${studentId}/profile`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log(response.data);
 
             const token = response.data.token;
-            const student : Student = response.data.profile;
+            const student: StudentAcademicProfile = response.data.profile;
 
             // Store token and student ID
             localStorage.setItem('authToken', token);
