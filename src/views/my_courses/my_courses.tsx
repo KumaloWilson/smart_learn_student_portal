@@ -3,7 +3,6 @@ import { Tabs, Space, Spin, Empty, Button, message, Table } from 'antd';
 import { useAuth } from '../../hooks/auth/auth';
 import {
     useCourseAssignments,
-    useCourseDetails,
     useCourseHistory,
     useCourseMaterials,
     useCurrentCourses,
@@ -16,7 +15,8 @@ import { CourseTable } from "../../components/course/table.tsx";
 import { CourseDetailsDrawer } from "../../components/course/details.tsx";
 import { v4 as uuidv4 } from 'uuid';
 import { courseAPI } from '../../services/course_service/api.ts';
-import { StudentCourseEnrollment } from '../../models/course_enrollment.ts';
+import { StudentCourseEnrollment } from '../../models/course_enrollment';
+import { Course } from '../../models/course';
 
 const { TabPane } = Tabs;
 
@@ -25,10 +25,7 @@ export const CourseDashboard: React.FC = () => {
     const studentId = student?.student_id;
     const [activeTab, setActiveTab] = useState('current');
     const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
-    const [selectedCourse, setSelectedCourse] = useState<{
-        courseId: string;
-        enrollmentId: string;
-    } | null>(null);
+    const [selectedCourse, setSelectedCourse] = useState<(StudentCourseEnrollment & Course) | undefined>(undefined);
     const [enrolling, setEnrolling] = useState(false);
 
     const {
@@ -51,23 +48,16 @@ export const CourseDashboard: React.FC = () => {
         isLoading: gpaLoading
     } = useSemesterGPA(studentId!, student!.academic_record!.academic_year, student!.academic_record!.semester);
 
-    const {
-        data: courseDetails,
-        isLoading: courseDetailsLoading
-    } = useCourseDetails(
-        selectedCourse?.courseId ?? '',
-        selectedCourse?.enrollmentId ?? ''
-    );
 
     const {
         data: courseMaterials,
         isLoading: materialsLoading
-    } = useCourseMaterials(selectedCourse?.courseId ?? '');
+    } = useCourseMaterials(selectedCourse?.course_id ?? '');
 
     const {
         data: courseAssignments,
         isLoading: assignmentsLoading
-    } = useCourseAssignments(selectedCourse?.courseId ?? '');
+    } = useCourseAssignments(selectedCourse?.course_id ?? '');
 
 
     // Create a set of enrolled course IDs
@@ -149,12 +139,12 @@ export const CourseDashboard: React.FC = () => {
         }
     }, [currentCourses, currentCoursesLoading]);
 
-    const handleViewDetails = (courseId: string, enrollmentId: string) => {
-        setSelectedCourse({ courseId, enrollmentId });
+    const handleViewDetails = (course: (StudentCourseEnrollment & Course)) => {
+        setSelectedCourse(course);
     };
 
     const handleCloseDetails = () => {
-        setSelectedCourse(null);
+        setSelectedCourse(undefined);
     };
 
     if (currentCoursesLoading || historyLoading || gpaLoading || availableCoursesLoading) {
@@ -178,11 +168,10 @@ export const CourseDashboard: React.FC = () => {
                             <Space direction="vertical" className="w-full">
                                 {currentCourses.map(course => (
                                     <CourseCard
-                                        key={course.enrollment_id!}
+                                        key={course!.enrollment_id}
                                         course={course}
                                         onViewDetails={() => handleViewDetails(
-                                            course.course_id,
-                                            course.enrollment_id
+                                            course
                                         )}
                                     />
                                 ))}
@@ -236,11 +225,10 @@ export const CourseDashboard: React.FC = () => {
                 <CourseDetailsDrawer
                     visible={!!selectedCourse}
                     onClose={handleCloseDetails}
-                    courseDetails={courseDetails}
+                    courseDetails={selectedCourse}
                     materials={courseMaterials || []}
                     assignments={courseAssignments || []}
                     loading={
-                        courseDetailsLoading ||
                         materialsLoading ||
                         assignmentsLoading
                     }

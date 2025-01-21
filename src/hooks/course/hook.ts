@@ -89,18 +89,7 @@ export const useUpdateEnrollment = () => {
     );
 };
 
-export const useCourseDetails = (courseId: string, enrollmentId: string) => {
-    return useQuery(
-        ['courseDetails', courseId, enrollmentId],
-        () => courseAPI.getCourseDetails(courseId, enrollmentId),
-        {
-            enabled: !!courseId && !!enrollmentId,
-            onError: () => {
-                message.error('Failed to fetch course details');
-            }
-        }
-    );
-};
+
 
 export const useCourseMaterials = (courseId: string) => {
     return useQuery(

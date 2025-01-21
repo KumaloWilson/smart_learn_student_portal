@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, Tag, Space, Button, Typography, } from 'antd';
 import { BookOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import {StudentCourseEnrollment} from "../../models/course_enrollment.ts";
-import {Course} from "../../models/course.ts";
+import { StudentCourseEnrollment } from "../../models/course_enrollment.ts";
+import { Course } from "../../models/course.ts";
 
 const { Title } = Typography;
 
@@ -12,6 +12,7 @@ interface CourseCardProps {
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course, onViewDetails }) => {
+    console.log(course);
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
             enrolled: 'blue',

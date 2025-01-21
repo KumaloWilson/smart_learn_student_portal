@@ -8,7 +8,7 @@ import {
     DownloadOutlined,
     CalendarOutlined
 } from '@ant-design/icons';
-import {StudentCourseEnrollment} from "../../models/course_enrollment.ts";
+import { StudentCourseEnrollment } from "../../models/course_enrollment.ts";
 import { Course } from '../../models/course.ts';
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
@@ -41,13 +41,13 @@ interface CourseDetailsDrawerProps {
 }
 
 export const CourseDetailsDrawer: React.FC<CourseDetailsDrawerProps> = ({
-                                                                            visible,
-                                                                            onClose,
-                                                                            courseDetails,
-                                                                            materials,
-                                                                            assignments,
-                                                                            loading
-                                                                        }) => {
+    visible,
+    onClose,
+    courseDetails,
+    materials,
+    assignments,
+    loading
+}) => {
     if (!courseDetails) return null;
 
     const getStatusColor = (status: string) => {
