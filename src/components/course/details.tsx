@@ -46,7 +46,6 @@ export const CourseDetailsDrawer: React.FC<CourseDetailsDrawerProps> = ({
     courseDetails,
     materials,
     assignments,
-    loading
 }) => {
     if (!courseDetails) return null;
 

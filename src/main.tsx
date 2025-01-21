@@ -4,7 +4,7 @@ import './index.css';
 import App from './App.tsx';
 import 'antd/dist/reset.css';
 import { ConfigProvider } from 'antd';
-import {AuthProvider} from "./providers/auth/auth_context.tsx";
+import { AuthProvider } from "./providers/auth/auth_context.tsx";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,9 +14,9 @@ createRoot(document.getElementById('root')!).render(
       }
     }
     }>
-        <AuthProvider>
-            <App />
-        </AuthProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ConfigProvider>
   </StrictMode>,
 );

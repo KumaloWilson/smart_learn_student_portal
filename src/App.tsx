@@ -144,6 +144,7 @@ const App: React.FC = () => {
     }
   ];
 
+
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -199,38 +200,55 @@ const App: React.FC = () => {
     return contentMap[selectedTab] || <Spin size="large" />;
   };
 
-  const handleMenuClick: MenuProps['onClick'] = ({ key, keyPath }) => {
-    const location = window.location.pathname;
-
-    // If we're in a quiz session, don't allow menu navigation unless explicitly handling it
-    if (location.includes('/quiz/session/')) {
-      return;
+  const handleMenuClick: MenuProps["onClick"] = ({ key, keyPath }) => {
+    if (window.location.pathname.includes('/quiz/session/')) {
+      return; // Prevent navigation during active quiz session
     }
 
     setSelectedTab(key);
 
-    // Update breadcrumb based on menu selection
-    const newBreadcrumb = ['Student Portal'];
-
-    // Handle parent menu items
+    // Update breadcrumb
+    const newBreadcrumb = ["Student Portal"];
     if (keyPath.length > 1) {
       const parentKey = keyPath[1];
-      const parentItem = items.find(item => item?.key === parentKey);
-      if (parentItem && 'label' in parentItem) {
+      const parentItem = items.find((item) => item?.key === parentKey);
+      if (parentItem && "label" in parentItem) {
         newBreadcrumb.push(parentItem.label as string);
       }
     }
 
-    // Add current selection to breadcrumb
-    const selectedItem = items.find(item => item?.key === key);
-    if (selectedItem && 'label' in selectedItem) {
+    const selectedItem = items.find((item) => item?.key === key);
+    if (selectedItem && "label" in selectedItem) {
       newBreadcrumb.push(selectedItem.label as string);
-    } else {
-      newBreadcrumb.push(key.charAt(0).toUpperCase() + key.slice(1));
     }
 
     setBreadcrumbItems(newBreadcrumb);
+
+
+    // Handle navigation based on the clicked menu item
+    // switch (key) {
+    //   case 'dashboard':
+    //     navigate('/dashboard');
+    //     break;
+    //   case 'courses':
+    //     navigate('/courses');
+    //     break;
+    //   case 'available':
+    //     navigate('/quiz/available');
+    //     break;
+    //   case 'attempts':
+    //     navigate('/quiz/attempts');
+    //     break;
+    //   case 'results':
+    //     navigate('/quiz/results');
+    //     break;
+    //   default:
+    //     // For other menu items, use the key as the path
+    //     navigate(`/${key}`);
+    // }
+
   };
+
 
   if (loading) {
     return (
@@ -295,11 +313,10 @@ const App: React.FC = () => {
                         <Routes>
                           <Route path="/dashboard" element={<MainContent />} />
                           <Route path="/courses" element={<CourseDashboard />} />
-                          {/* <Route path="/courses/:courseId" element={<CourseDetails />} /> */}
-                          <Route
-                            path="/quiz/session/:attempt_id"
-                            element={<QuizSessionContainer />}
-                          />
+                          <Route path="/quiz/available" element={<MainContent />} />
+                          <Route path="/quiz/attempts" element={<MainContent />} />
+                          <Route path="/quiz/results" element={<MainContent />} />
+                          <Route path="/quiz/session/:attempt_id" element={<QuizSessionContainer />} />
                           <Route
                             path="/quiz/result/:attempt_id"
                             element={
@@ -311,6 +328,8 @@ const App: React.FC = () => {
                               />
                             }
                           />
+                          {/* Add routes for other menu items */}
+                          <Route path="/:tab" element={<MainContent />} /> {/* This will handle other menu items */}
                           <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                       </div>
