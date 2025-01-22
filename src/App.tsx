@@ -161,9 +161,7 @@ const App: React.FC = () => {
 
     const contentMap: Record<string, React.ReactNode> = {
       dashboard: <Dashboard />,
-      profile: <div>Profile Content</div>,
       courses: <CourseDashboard />,
-      history: <div>Enrolled Courses Content</div>,
       available: (
         <QuizList
           studentId={student!.student_id!}
