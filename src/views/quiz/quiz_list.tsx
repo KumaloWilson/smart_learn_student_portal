@@ -3,7 +3,7 @@ import { Tabs, Button, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Quiz } from '../../models/quiz';
 import { QuizCard } from '../../components/quiz/quiz_card';
-import { useCurrentCourses } from '../../hooks/course/hook';
+import { useCurrentCourses, useCurrentCoursesTopics } from '../../hooks/course/hook';
 import { CustomQuizForm } from '../../components/quiz/quiz_form';
 import { useQuizzes } from '../../hooks/quiz/use_quizzes';
 
@@ -28,6 +28,12 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         isLoading: coursesLoading
     } = useCurrentCourses(studentId);
 
+    // Fetch selected course topics
+    const {
+        data: selectedCourseTopics,
+        isLoading: topicsLoading
+    } = useCurrentCoursesTopics(selectedCourse);
+
     // Fetch quizzes
     const {
         quizzes,
@@ -42,12 +48,14 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
     };
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
-        try {
-            await createCustomQuiz(values);
-            setFormVisible(false);
-        } catch (error) {
-            console.error('Failed to create quiz:', error);
-        }
+        await createQuiz(values);
+        setFormVisible(false);
+    };
+
+    // Handle course selection change
+    const handleCourseChange = (courseId: string) => {
+        console.log('Selected course:', courseId);
+        setSelectedCourse(courseId);
     };
 
     if (coursesLoading || quizzesLoading) {
@@ -120,9 +128,9 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 onSubmit={handleCreateQuiz}
                 initialValues={undefined}
                 lecturerCourses={currentCourses || []}
-                courseTopics={[]} // You'll need to fetch course topics or pass them as props
+                courseTopics={selectedCourseTopics || []}
                 selectedCourse={selectedCourse}
-                onCourseChange={setSelectedCourse}
+                onCourseChange={handleCourseChange}
             />
         </div>
     );

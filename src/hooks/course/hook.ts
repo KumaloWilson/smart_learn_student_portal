@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { courseAPI } from "../../services/course_service/api.ts";
 import { StudentCourseEnrollment } from '../../models/course_enrollment.ts';
 import { Course } from "../../models/course.ts";
+import { CourseTopic } from '../../models/course_topic.ts';
 
 
 export const useAvailableCourses = (programId: string, level: string) => {
@@ -21,6 +22,18 @@ export const useCurrentCourses = (studentId: string): UseQueryResult<(StudentCou
     return useQuery(
         ['currentCourses', studentId],
         () => courseAPI.getCurrentCourses(studentId),
+        {
+            onError: () => {
+                message.error('Failed to fetch current courses');
+            }
+        }
+    );
+};
+
+export const useCurrentCoursesTopics = (courseId: string): UseQueryResult<(CourseTopic)[]> => {
+    return useQuery(
+        ['currentCoursesTopics', courseId],
+        () => courseAPI.getCourseTopics(courseId),
         {
             onError: () => {
                 message.error('Failed to fetch current courses');

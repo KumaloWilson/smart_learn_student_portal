@@ -4,6 +4,10 @@ import { StudentCourseEnrollment } from "../../models/course_enrollment.ts";
 
 export const courseAPI = {
 
+    getCourseTopics: async (courseId: string) => {
+        const response = await axios.get(`${API_BASE_URL}/lecturer/course/topics/course/${courseId}`);
+        return response.data.data;
+    },
 
     getAvailableCourses: async (programId: string, level: string) => {
         const response = await axios.get(
