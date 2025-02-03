@@ -17,7 +17,7 @@ interface QuizFormProps {
     onCourseChange: (courseId: string) => void;
 }
 
-export const QuizForm: React.FC<QuizFormProps> = ({
+export const CustomQuizForm: React.FC<QuizFormProps> = ({
     visible,
     onCancel,
     onSubmit,

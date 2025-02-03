@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Tabs, Button, Spin, Modal, message } from 'antd';
+import { Tabs, Button, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { Quiz } from '../../models/quiz';
 import { QuizCard } from '../../components/quiz/quiz_card';
 import { useQuizzes } from '../../hooks/quiz/quiz_session';
+import { useCurrentCourses } from '../../hooks/course/hook';
+import { CustomQuizForm } from '../../components/quiz/quiz_form';
 
 const { TabPane } = Tabs;
 
@@ -12,12 +15,12 @@ interface StudentQuizListProps {
 }
 
 export const StudentQuizList: React.FC<StudentQuizListProps> = ({
-                                                                    studentId,
-                                                                    onQuizStart
-                                                                }) => {
+    studentId,
+    onQuizStart
+}) => {
     // States
-    const [isCustomQuizModalVisible, setCustomQuizModalVisible] = useState(false);
-    const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
+    const [formVisible, setFormVisible] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState<string>('');
 
     // Fetch current courses
     const {
@@ -25,7 +28,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         isLoading: coursesLoading
     } = useCurrentCourses(studentId);
 
-    // Fetch quizzes (you'll need to implement this hook)
+    // Fetch quizzes
     const {
         quizzes,
         isLoading: quizzesLoading,
@@ -38,17 +41,12 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         }
     };
 
-    const handleCreateCustomQuiz = async (values: any) => {
+    const handleCreateQuiz = async (values: Partial<Quiz>) => {
         try {
-            setIsCreatingQuiz(true);
             await createCustomQuiz(values);
-            setCustomQuizModalVisible(false);
-            message.success('Custom quiz created successfully!');
+            setFormVisible(false);
         } catch (error) {
-            message.error('Failed to create custom quiz');
-            console.error(error);
-        } finally {
-            setIsCreatingQuiz(false);
+            console.error('Failed to create quiz:', error);
         }
     };
 
@@ -70,7 +68,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    onClick={() => setCustomQuizModalVisible(true)}
+                    onClick={() => setFormVisible(true)}
                 >
                     Create Custom Quiz
                 </Button>
@@ -87,6 +85,11 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                                 showStartButton={true}
                             />
                         ))}
+                        {quizzes.length === 0 && (
+                            <div className="col-span-full text-center py-8 text-gray-500">
+                                No quizzes available
+                            </div>
+                        )}
                     </div>
                 </TabPane>
 
@@ -111,20 +114,16 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 ))}
             </Tabs>
 
-            <Modal
-                title="Create Custom Quiz"
-                open={isCustomQuizModalVisible}
-                onCancel={() => setCustomQuizModalVisible(false)}
-                footer={null}
-                width={800}
-            >
-                <CustomQuizForm
-                    onSubmit={handleCreateCustomQuiz}
-                    onCancel={() => setCustomQuizModalVisible(false)}
-                    isLoading={isCreatingQuiz}
-                    currentCourses={currentCourses || []}
-                />
-            </Modal>
+            <CustomQuizForm
+                visible={formVisible}
+                onCancel={() => setFormVisible(false)}
+                onSubmit={handleCreateQuiz}
+                initialValues={undefined}
+                lecturerCourses={currentCourses || []}
+                courseTopics={[]} // You'll need to fetch course topics or pass them as props
+                selectedCourse={selectedCourse}
+                onCourseChange={setSelectedCourse}
+            />
         </div>
     );
 };
