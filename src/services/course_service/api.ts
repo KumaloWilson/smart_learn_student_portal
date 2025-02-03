@@ -9,7 +9,7 @@ export const courseAPI = {
         const response = await axios.get(
             `${API_BASE_URL}/courses/program/${programId}/level/${level}`
         );
-        return response.data;
+        return response.data.data;
     },
 
     // Get all current courses for student
@@ -17,7 +17,7 @@ export const courseAPI = {
         const response = await axios.get(
             `${API_BASE_URL}/student/course/enrollments/${studentId}/courses/current`
         );
-        return response.data;
+        return response.data.data;
     },
 
 
@@ -26,7 +26,7 @@ export const courseAPI = {
         const response = await axios.get(
             `${API_BASE_URL}/student/course/enrollments/${studentId}/courses/history`
         );
-        return response.data;
+        return response.data.data;
     },
 
     // Get semester GPA
@@ -34,7 +34,7 @@ export const courseAPI = {
         const response = await axios.get(
             `${API_BASE_URL}/student/course/enrollments/${studentId}/gpa/${academicYear}/${semester}`
         );
-        return response.data;
+        return response.data.data;
     },
 
     // Enroll in a course
@@ -43,7 +43,7 @@ export const courseAPI = {
             `${API_BASE_URL}/student/course/enrollments/enroll`,
             enrollmentData
         );
-        return response.data;
+        return response.data.data;
     },
 
     bulkEnrollInCourses: async (enrollments: StudentCourseEnrollment[]) => {
@@ -52,7 +52,7 @@ export const courseAPI = {
                 `${API_BASE_URL}/student/course/enrollments/bulk-enroll`,
                 enrollments
             );
-            return response.data;
+            return response.data.data;
         } catch (error: any) {
             // Rethrow the error with the backend message if available
             if (error.response?.data?.message) {
@@ -68,6 +68,6 @@ export const courseAPI = {
             `${API_BASE_URL}/student/course/enrollments/${enrollmentId}`,
             updates
         );
-        return response.data;
+        return response.data.data;
     }
 };

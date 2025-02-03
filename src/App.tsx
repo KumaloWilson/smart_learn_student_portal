@@ -3,14 +3,11 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, } from "
 import {
   DashboardOutlined,
   BookOutlined,
-  CalendarOutlined,
   NotificationOutlined,
   MessageOutlined,
   TrophyOutlined,
   UserOutlined,
-  FileProtectOutlined,
   QuestionCircleOutlined,
-  ClockCircleOutlined,
   FormOutlined,
   CheckCircleOutlined,
   LineChartOutlined,
@@ -83,16 +80,6 @@ const App: React.FC = () => {
       ]
     },
     {
-      key: "schedule",
-      icon: <CalendarOutlined />,
-      label: "Schedule",
-      children: [
-        { key: "timetable", label: "Class Timetable" },
-        { key: "exams", label: "Exam Schedule", icon: <FileProtectOutlined /> },
-        { key: "deadlines", label: "Assignment Deadlines" }
-      ]
-    },
-    {
       key: "performance",
       icon: <TrophyOutlined />,
       label: "Performance",
@@ -121,11 +108,6 @@ const App: React.FC = () => {
         { key: "messages", label: "Messages" },
         { key: "discussions", label: "Discussion Forums" }
       ]
-    },
-    {
-      key: "attendance",
-      icon: <ClockCircleOutlined />,
-      label: "Attendance"
     },
     {
       key: "notifications",

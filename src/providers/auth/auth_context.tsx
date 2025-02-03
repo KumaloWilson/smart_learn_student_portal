@@ -15,8 +15,6 @@ interface AuthContextType {
 }
 
 
-
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [student, setStudent] = useState<StudentAcademicProfile | null>(null);
