@@ -21,7 +21,6 @@ import {
 import { Layout, Menu, theme, Spin } from "antd";
 import type { MenuProps } from "antd";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { QuizList } from "./views/quiz/quiz_list";
 import AttemptedQuizResults from "./views/quiz/quiz_result";
 import QuizSessionContainer from "./views/quiz/quiz_session_container";
 import Dashboard from "./views/dashboard/dashboard.tsx";
@@ -29,6 +28,7 @@ import ProfileHeader from "./components/profile/profile_header.tsx";
 import LoginPage from "./views/auth/login_page.tsx";
 import { useAuth } from "./hooks/auth/auth.ts";
 import { CourseDashboard } from "./views/my_courses/my_courses.tsx";
+import StudentQuizList from "./views/quiz/quiz_list.tsx";
 
 const queryClient = new QueryClient();
 const { Content, Footer, Sider } = Layout;
@@ -145,13 +145,13 @@ const App: React.FC = () => {
       dashboard: <Dashboard />,
       courses: <CourseDashboard />,
       available: (
-        <QuizList
+        <StudentQuizList
           studentId={student!.student_id!}
           onQuizStart={handleQuizStart}
         />
       ),
-      attempts: <QuizList filterType="attempts" studentId={student!.student_id!} />,
-      results: <QuizList filterType="completed" studentId={student!.student_id!} />,
+      attempts: <StudentQuizList studentId={student!.student_id!} />,
+      results: <StudentQuizList studentId={student!.student_id!} />,
       progress: <div>Learning Progress Content</div>,
       assignments: <div>Assignments Content</div>,
       timetable: <div>Class Timetable Content</div>,
