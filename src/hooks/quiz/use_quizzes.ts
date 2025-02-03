@@ -3,13 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { quizAPI } from '../../services/quiz_services/api';
 import { Quiz } from '../../models/quiz';
-import { v4 as uuidv4 } from 'uuid';
 
 interface UseQuizzesResult {
     quizzes: Quiz[];
     isLoading: boolean;
     error: string | null;
-    createCustomQuiz: (quizData: Partial<Quiz>) => Promise<void>;
+    createCustomQuiz: (values: Partial<Quiz>) => Promise<unknown>
     refreshQuizzes: () => Promise<void>;
     getQuizzesByCourse: (courseId: string) => Quiz[];
 }
@@ -52,49 +51,35 @@ export const useQuizzes = (studentId: string): UseQuizzesResult => {
         loadQuizzes();
     }, [loadQuizzes]);
 
-    const createCustomQuiz = async (quizData: Partial<Quiz>) => {
+    const createCustomQuiz = async (values: Partial<Quiz>) => {
         try {
-            setIsLoading(true);
-
-            const customQuizData = {
-                quiz_id: uuidv4(),
-                student_id: studentId,
-                course_id: quizData.course_id || 'custom',
+            const requestBody = {
+                ...values,
                 created_by: studentId,
                 status: 'active',
-                isCustom: true,
-                ...quizData
+                learning_objectives: values.learning_objectives || [
+                    `Understand ${values.topic} concepts`,
+                    `Master ${values.topic} fundamentals`
+                ],
+                tags: [
+                    values.topic?.toLowerCase(),
+                    values.difficulty,
+                    values.subtopic?.toLowerCase()
+                ].filter(Boolean)
             };
 
-            // Create the custom quiz
-            const response = await quizAPI.createQuiz(customQuizData);
-
-            if (!response.data) {
-                throw new Error('Failed to create custom quiz');
+            const response = await quizAPI.createQuiz(requestBody);
+            if (response.success) {
+                message.success('Quiz created successfully');
+                await loadQuizzes();
             }
-
-            // Start the quiz session
-            const sessionResponse = await quizAPI.startQuiz({
-                quiz_id: response.data.quiz_id,
-                student_id: studentId
-            });
-
-            if (!sessionResponse.data) {
-                throw new Error('Failed to start quiz session');
-            }
-
-            // Add the new quiz to the state
-            setQuizzes(prev => [...prev, response.data]);
-
-            return sessionResponse.data.attempt_id;
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to create custom quiz';
-            setError(errorMessage);
-            throw new Error(errorMessage);
-        } finally {
-            setIsLoading(false);
+            return response;
+        } catch (error) {
+            message.error('Failed to create quiz');
+            throw error;
         }
     };
+
 
     const refreshQuizzes = async () => {
         await loadQuizzes();
@@ -108,8 +93,8 @@ export const useQuizzes = (studentId: string): UseQuizzesResult => {
         quizzes,
         isLoading,
         error,
-        createCustomQuiz,
         refreshQuizzes,
+        createCustomQuiz,
         getQuizzesByCourse
     };
 };

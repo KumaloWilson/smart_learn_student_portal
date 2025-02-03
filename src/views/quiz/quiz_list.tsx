@@ -48,7 +48,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
     };
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
-        await createQuiz(values);
+        await createCustomQuiz(values);
         setFormVisible(false);
     };
 
