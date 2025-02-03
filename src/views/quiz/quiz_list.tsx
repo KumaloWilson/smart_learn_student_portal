@@ -1,272 +1,132 @@
-import React, { useEffect, useState } from 'react';
-import { Row, Col, Typography, Spin, Empty, Button, Form, Modal, Select, InputNumber, message } from 'antd';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Tabs, Button, Spin, Modal, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { QuizCard } from '../../components/quiz/quiz_card';
-import { quizAPI } from '../../services/quiz_services/api';
-import { Quiz } from '../../models/quiz';
-import { v4 as uuidv4 } from 'uuid';
+import { useQuizzes } from '../../hooks/quiz/quiz_session';
 
-const { Title } = Typography;
-const { Option } = Select;
+const { TabPane } = Tabs;
 
-interface QuizListProps {
-    filterType?: 'attempts' | 'completed';
-    onQuizStart?: (attempt_id: string) => void;
+interface StudentQuizListProps {
     studentId: string;
+    onQuizStart?: (quizId: string) => void;
 }
 
-interface CustomQuizForm {
-    topic: string;
-    subtopic?: string;
-    difficulty: 'easy' | 'medium' | 'hard';
-    total_questions: number;
-    learning_objectives?: string[];
-}
-
-export const QuizList: React.FC<QuizListProps> = ({
-    filterType,
-    onQuizStart,
-    studentId
-}) => {
-    const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+export const StudentQuizList: React.FC<StudentQuizListProps> = ({
+                                                                    studentId,
+                                                                    onQuizStart
+                                                                }) => {
+    // States
+    const [isCustomQuizModalVisible, setCustomQuizModalVisible] = useState(false);
     const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
-    const [form] = Form.useForm();
 
-    // Loading indicator configuration
-    const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
+    // Fetch current courses
+    const {
+        data: currentCourses,
+        isLoading: coursesLoading
+    } = useCurrentCourses(studentId);
 
-    useEffect(() => {
-        loadQuizzes();
-    }, [filterType]);
+    // Fetch quizzes (you'll need to implement this hook)
+    const {
+        quizzes,
+        isLoading: quizzesLoading,
+        createCustomQuiz
+    } = useQuizzes(studentId);
 
-    const loadQuizzes = async () => {
-        try {
-            setLoading(true);
-            const data = await quizAPI.getQuizzes();
-            setQuizzes(data);
-        } catch (error) {
-            message.error('Failed to load quizzes. Please try again.');
-            console.error(error);
-        } finally {
-            setLoading(false);
+    const handleStartQuiz = (quizId: string) => {
+        if (onQuizStart) {
+            onQuizStart(quizId);
         }
     };
 
-    const handleStartQuiz = async () => {
-        if (!onQuizStart) return;
-
+    const handleCreateCustomQuiz = async (values: any) => {
         try {
-            const response = await quizAPI.startQuiz({});
-            onQuizStart(response.data.quizSession.attempt_id);
+            setIsCreatingQuiz(true);
+            await createCustomQuiz(values);
+            setCustomQuizModalVisible(false);
+            message.success('Custom quiz created successfully!');
         } catch (error) {
-            message.error('Failed to start quiz. Please try again.');
+            message.error('Failed to create custom quiz');
             console.error(error);
-        }
-    };
-
-    const handleCreateCustomQuiz = async (values: CustomQuizForm) => {
-        setIsCreatingQuiz(true);
-        try {
-            const requestBody = {
-                student_id: studentId,
-                quiz: {
-                    quiz_id: uuidv4(),
-                    course_id: 'custom-course',
-                    topic: values.topic,
-                    subtopic: values.subtopic,
-                    difficulty: values.difficulty,
-                    created_by: 'system',
-                    total_questions: values.total_questions,
-                    time_limit: 30,
-                    passing_score: 70,
-                    status: 'active',
-                    learning_objectives: values.learning_objectives || [
-                        `Understand ${values.topic} concepts`,
-                        `Master ${values.topic} fundamentals`
-                    ],
-                    tags: [values.topic.toLowerCase(), values.difficulty, values.subtopic?.toLowerCase()].filter(Boolean)
-                }
-            };
-
-            const data = await quizAPI.startQuiz(requestBody);
-
-            if (data.attempt && onQuizStart) {
-                message.success('Quiz created successfully!');
-                onQuizStart(data.attempt.quizSession.attempt_id);
-            }
-
-            setIsModalVisible(false);
-            form.resetFields();
-        } catch (error) {
-            message.error('Failed to create custom quiz. Please try again.');
-            console.error('Failed to create custom quiz:', error);
         } finally {
             setIsCreatingQuiz(false);
         }
     };
 
-    const renderContent = () => {
-        if (loading) {
-            return (
-                <div style={{ textAlign: 'center', padding: '50px 0' }}>
-                    <Spin indicator={antIcon} tip="Loading quizzes..." />
-                </div>
-            );
-        }
-
-        if (!quizzes.length) {
-            return (
-                <div className="text-center" style={{ padding: '40px 0' }}>
-                    <Empty
-                        description={
-                            filterType === 'attempts' ? 'No quiz attempts yet' :
-                                filterType === 'completed' ? 'No completed quizzes' :
-                                    'No mandatory quizzes available'
-                        }
-                    />
-                    {!filterType && (
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => setIsModalVisible(true)}
-                            className="mt-4"
-                            size="large"
-                        >
-                            Create Custom Quiz
-                        </Button>
-                    )}
-                </div>
-            );
-        }
-
+    if (coursesLoading || quizzesLoading) {
         return (
-            <Row gutter={[16, 16]}>
-                {!filterType && (
-                    <Col span={24}>
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => setIsModalVisible(true)}
-                            className="mb-4"
-                            size="large"
-                        >
-                            Create Custom Quiz
-                        </Button>
-                    </Col>
-                )}
-                {quizzes.map(quiz => (
-                    <Col xs={24} sm={12} md={8} key={quiz.quiz_id}>
-                        <QuizCard
-                            quiz={quiz}
-                            onStart={handleStartQuiz}
-                            showStartButton={!filterType}
-                        />
-                    </Col>
-                ))}
-            </Row>
+            <div className="flex justify-center items-center h-64">
+                <Spin size="large" />
+            </div>
         );
+    }
+
+    const getQuizzesForCourse = (courseId: string) => {
+        return quizzes.filter(quiz => quiz.course_id === courseId);
     };
 
     return (
-        <div className="quiz-list">
-            <Title level={2}>
-                {filterType === 'attempts' ? 'My Quiz Attempts' :
-                    filterType === 'completed' ? 'Completed Quizzes' :
-                        'Available Quizzes'}
-            </Title>
-            {renderContent()}
+        <div className="student-quiz-list">
+            <div className="mb-4">
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCustomQuizModalVisible(true)}
+                >
+                    Create Custom Quiz
+                </Button>
+            </div>
+
+            <Tabs defaultActiveKey="all">
+                <TabPane tab="All Quizzes" key="all">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {quizzes.map(quiz => (
+                            <QuizCard
+                                key={quiz.quiz_id}
+                                quiz={quiz}
+                                onStart={() => handleStartQuiz(quiz.quiz_id)}
+                                showStartButton={true}
+                            />
+                        ))}
+                    </div>
+                </TabPane>
+
+                {currentCourses?.map(course => (
+                    <TabPane tab={course.course_name} key={course.course_id}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {getQuizzesForCourse(course.course_id).map(quiz => (
+                                <QuizCard
+                                    key={quiz.quiz_id}
+                                    quiz={quiz}
+                                    onStart={() => handleStartQuiz(quiz.quiz_id)}
+                                    showStartButton={true}
+                                />
+                            ))}
+                            {getQuizzesForCourse(course.course_id).length === 0 && (
+                                <div className="col-span-full text-center py-8 text-gray-500">
+                                    No quizzes available for this course
+                                </div>
+                            )}
+                        </div>
+                    </TabPane>
+                ))}
+            </Tabs>
 
             <Modal
                 title="Create Custom Quiz"
-                open={isModalVisible}
-                onCancel={() => {
-                    if (!isCreatingQuiz) {
-                        setIsModalVisible(false);
-                        form.resetFields();
-                    }
-                }}
+                open={isCustomQuizModalVisible}
+                onCancel={() => setCustomQuizModalVisible(false)}
                 footer={null}
-                maskClosable={!isCreatingQuiz}
-                closable={!isCreatingQuiz}
+                width={800}
             >
-                <Form
-                    form={form}
-                    onFinish={handleCreateCustomQuiz}
-                    layout="vertical"
-                    disabled={isCreatingQuiz}
-                >
-                    <Form.Item
-                        name="topic"
-                        label="Topic"
-                        rules={[{ required: true, message: 'Please enter a topic' }]}
-                    >
-                        <Select
-                            placeholder="Select topic"
-                            showSearch
-                            optionFilterProp="children"
-                        >
-                            <Option value="Mathematics">Mathematics</Option>
-                            <Option value="Science">Science</Option>
-                            <Option value="History">History</Option>
-                            <Option value="Literature">Literature</Option>
-                            <Option value="Programming">Programming</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="subtopic"
-                        label="Subtopic (Optional)"
-                    >
-                        <Select
-                            placeholder="Select subtopic"
-                            showSearch
-                            optionFilterProp="children"
-                            allowClear
-                        >
-                            <Option value="Variables">Variables</Option>
-                            <Option value="Functions">Functions</Option>
-                            <Option value="Algorithms">Algorithms</Option>
-                            <Option value="Data Structures">Data Structures</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="difficulty"
-                        label="Difficulty Level"
-                        rules={[{ required: true, message: 'Please select difficulty' }]}
-                    >
-                        <Select placeholder="Select difficulty">
-                            <Option value="easy">Easy</Option>
-                            <Option value="medium">Medium</Option>
-                            <Option value="hard">Hard</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="total_questions"
-                        label="Number of Questions"
-                        rules={[{ required: true, message: 'Please enter number of questions' }]}
-                    >
-                        <InputNumber min={1} max={50} />
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            block
-                            loading={isCreatingQuiz}
-                            disabled={isCreatingQuiz}
-                        >
-                            {isCreatingQuiz ? 'Creating Quiz...' : 'Create Quiz'}
-                        </Button>
-                    </Form.Item>
-                </Form>
+                <CustomQuizForm
+                    onSubmit={handleCreateCustomQuiz}
+                    onCancel={() => setCustomQuizModalVisible(false)}
+                    isLoading={isCreatingQuiz}
+                    currentCourses={currentCourses || []}
+                />
             </Modal>
         </div>
     );
 };
 
-export default QuizList;
+export default StudentQuizList;

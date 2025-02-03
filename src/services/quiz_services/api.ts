@@ -31,8 +31,6 @@ export const quizAPI = {
         return response.data;
     },
 
-
-
     getQuizSession: async (attempt_id: string) => {
         const response = await axios.get(`${API_BASE_URL}/quiz/session/current/${attempt_id}`);
         return response.data;
