@@ -3,9 +3,9 @@ import { Tabs, Button, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Quiz } from '../../models/quiz';
 import { QuizCard } from '../../components/quiz/quiz_card';
-import { useQuizzes } from '../../hooks/quiz/quiz_session';
 import { useCurrentCourses } from '../../hooks/course/hook';
 import { CustomQuizForm } from '../../components/quiz/quiz_form';
+import { useQuizzes } from '../../hooks/quiz/use_quizzes';
 
 const { TabPane } = Tabs;
 
