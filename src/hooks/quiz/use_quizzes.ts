@@ -57,6 +57,7 @@ export const useQuizzes = (studentId: string): UseQuizzesResult => {
                 ...values,
                 created_by: studentId,
                 status: 'active',
+                creator_role: 'student',
                 learning_objectives: values.learning_objectives || [
                     `Understand ${values.topic} concepts`,
                     `Master ${values.topic} fundamentals`
