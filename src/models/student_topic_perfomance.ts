@@ -1,11 +1,9 @@
-import { SubtopicPerformance } from './student_sub_topic_perfomance';
-
 export interface TopicPerformance {
     topic_id: string;
     topic_name: string;
-    average_score: number;
-    completion_rate: number;
-    weak_subtopics: SubtopicPerformance[];
-    strong_subtopics: SubtopicPerformance[];
+    average_score: string;
+    completion_rate: string;
+    weak_subtopics: unknown[];
+    strong_subtopics: unknown[];
     recommended_actions: string[];
 }

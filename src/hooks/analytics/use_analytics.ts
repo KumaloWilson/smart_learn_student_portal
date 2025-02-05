@@ -1,6 +1,7 @@
 // hooks/analytics/use-learning-analytics.ts
 import { useQuery } from 'react-query';
 import axios from 'axios';
+import { TopicPerformance } from '../../models/student_topic_perfomance';
 
 interface LearningAnalyticsResponse {
     success: boolean;

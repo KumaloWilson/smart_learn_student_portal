@@ -8,16 +8,10 @@ import {
 
 // Hooks
 import { useAuth } from '../../hooks/auth/auth';
-// Types
-interface TopicPerformance {
-    topic_id: string;
-    topic_name: string;
-    average_score: string;
-    completion_rate: string;
-    weak_subtopics: any[];
-    strong_subtopics: any[];
-    recommended_actions: string[];
-}
+import { useLearningAnalytics } from '../../hooks/analytics/use_analytics';
+import { useCurrentCourses } from '../../hooks/course/hook';
+import { TopicPerformance } from '../../models/student_topic_perfomance';
+
 
 const LearningAnalytics: React.FC = () => {
     const { student } = useAuth();
@@ -26,7 +20,7 @@ const LearningAnalytics: React.FC = () => {
     const {
         data: currentCourses,
         isLoading: coursesLoading
-    } = useCurrentCourses(studentId);
+    } = useCurrentCourses(studentId!);
 
     const {
         data: analyticsData,
