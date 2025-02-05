@@ -29,7 +29,6 @@ const AttemptedQuizResults: React.FC<QuizResultProps> = ({ onBackToList }) => {
 
                     console.table(response.data.responses)
 
-                    // Transform the API response to match the expected QuizResult structure
                     const transformedResult: QuizResult = {
                         score: parseFloat(response.data.score) || 0,
                         statistics: {

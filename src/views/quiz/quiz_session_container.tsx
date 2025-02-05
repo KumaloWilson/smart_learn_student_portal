@@ -22,9 +22,6 @@ const QuizSessionContainer: React.FC = () => {
     // Custom loading spinner
     const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
-
-
-
     const handleQuizComplete = async (responses: QuestionResponse[]) => {
         setSubmitting(true);
 
