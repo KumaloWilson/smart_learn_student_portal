@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { Tabs, Button, Spin, message } from 'antd';
+import { Tabs, Button, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Quiz } from '../../models/quiz';
 import { QuizCard } from '../../components/quiz/quiz_card';
 import { useCurrentCourses, useCurrentCoursesTopics } from '../../hooks/course/hook';
 import { CustomQuizForm } from '../../components/quiz/quiz_form';
 import { useQuizzes } from '../../hooks/quiz/use_quizzes';
-import { quizAPI } from '../../services/quiz_services/api';
 
 const { TabPane } = Tabs;
 
 interface StudentQuizListProps {
     studentId: string;
-    onQuizStart?: (attempt_id: string) => void;
+    onQuizStart?: (quizId: string) => void;
 }
 
 export const StudentQuizList: React.FC<StudentQuizListProps> = ({
@@ -42,18 +41,11 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         createCustomQuiz
     } = useQuizzes(studentId);
 
-    const handleStartQuiz = async () => {
-        if (!onQuizStart) return;
-
-        try {
-            const response = await quizAPI.startQuiz({});
-            onQuizStart(response.data.quizSession.attempt_id);
-        } catch (error) {
-            message.error('Failed to start quiz. Please try again.');
-            console.error(error);
+    const handleStartQuiz = (quizId: string) => {
+        if (onQuizStart) {
+            onQuizStart(quizId);
         }
     };
-
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
         await createCustomQuiz(values);
@@ -97,8 +89,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                             <QuizCard
                                 key={quiz.quiz_id}
                                 quiz={quiz}
-                                student_id={studentId}
-                                onStart={() => handleStartQuiz(studentId)}
+                                onStart={() => handleStartQuiz(quiz.quiz_id)}
                             />
                         ))}
                         {quizzes.length === 0 && (
@@ -116,8 +107,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                                 <QuizCard
                                     key={quiz.quiz_id}
                                     quiz={quiz}
-                                    student_id={studentId}
-                                    onStart={() => handleStartQuiz(studentId)}
+                                    onStart={() => handleStartQuiz(quiz.quiz_id)}
                                 />
                             ))}
                             {getQuizzesForCourse(course.course_id).length === 0 && (
