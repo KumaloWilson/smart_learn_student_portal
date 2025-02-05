@@ -41,9 +41,9 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         createCustomQuiz
     } = useQuizzes(studentId);
 
-    const handleStartQuiz = (quizId: string) => {
+    const handleStartQuiz = (studentId: string) => {
         if (onQuizStart) {
-            onQuizStart(quizId);
+            onQuizStart(studentId);
         }
     };
 
@@ -89,8 +89,8 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                             <QuizCard
                                 key={quiz.quiz_id}
                                 quiz={quiz}
-                                onStart={() => handleStartQuiz(quiz.quiz_id)}
-                                showStartButton={true}
+                                student_id={studentId}
+                                onStart={() => handleStartQuiz(studentId)}
                             />
                         ))}
                         {quizzes.length === 0 && (
@@ -108,8 +108,8 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                                 <QuizCard
                                     key={quiz.quiz_id}
                                     quiz={quiz}
-                                    onStart={() => handleStartQuiz(quiz.quiz_id)}
-                                    showStartButton={true}
+                                    student_id={studentId}
+                                    onStart={() => handleStartQuiz(studentId)}
                                 />
                             ))}
                             {getQuizzesForCourse(course.course_id).length === 0 && (

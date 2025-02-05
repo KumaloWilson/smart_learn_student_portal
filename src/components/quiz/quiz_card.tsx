@@ -6,11 +6,11 @@ import { Quiz } from '../../models/quiz';
 
 interface QuizCardProps {
     quiz: Quiz;
-    onStart: (quiz_id: string) => void;
-    showStartButton: boolean;
+    student_id: string;
+    onStart: (student_id: string) => void;
 }
 
-export const QuizCard: React.FC<QuizCardProps> = ({ quiz, onStart, showStartButton }) => (
+export const QuizCard: React.FC<QuizCardProps> = ({ student_id, quiz, onStart }) => (
     <Card title={quiz.subtopic} className="quiz-card">
         <p>{quiz.subtopic}</p>
         <Space direction="vertical" size="small" style={{ width: '100%' }}>
@@ -25,7 +25,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz, onStart, showStartButt
                 <ClockCircleOutlined /> {quiz.time_limit} minutes
                 <QuestionCircleOutlined /> {quiz.total_questions} questions
             </Space>
-            <Button type="primary" onClick={() => onStart(quiz.quiz_id)}>
+            <Button type="primary" onClick={() => onStart(student_id)}>
                 Start Quiz
             </Button>
         </Space>
