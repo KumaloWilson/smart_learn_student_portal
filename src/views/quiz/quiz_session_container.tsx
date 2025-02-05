@@ -26,7 +26,7 @@ const QuizSessionContainer: React.FC = () => {
         setSubmitting(true);
 
         try {
-            // Simulate progress for better UX
+
             const progressInterval = setInterval(() => {
                 setSubmitProgress(prev => Math.min(prev + 10, 90));
             }, 300);
@@ -179,8 +179,8 @@ const QuizSessionContainer: React.FC = () => {
             <QuizSession
                 attempt_id={attempt_id!}
                 questions={session.questions}
-                quizTimeLimit={30}
                 onQuizComplete={handleQuizComplete}
+                timeLimit={30}
             />
 
             <div className="fixed bottom-4 right-4">

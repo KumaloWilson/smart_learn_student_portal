@@ -116,7 +116,7 @@ export const QuizSession: React.FC<QuizSessionProps> = ({
             question_id: currentQuestion.question_id,
             student_answer: answer,
             is_correct: answer === currentQuestion.correct_answer,
-            time_taken: Math.floor(questionTimeSpent.current), // Actual time spent on question
+            time_taken: Math.floor(questionTimeSpent.current),
             points_earned: answer === currentQuestion.correct_answer ? currentQuestion.points : 0,
             feedback: answer === currentQuestion.correct_answer
                 ? 'Correct!'
