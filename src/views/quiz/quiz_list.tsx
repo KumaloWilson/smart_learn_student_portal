@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Tabs, Button, Spin } from 'antd';
+import { Tabs, Button, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Quiz } from '../../models/quiz';
 import { QuizCard } from '../../components/quiz/quiz_card';
 import { useCurrentCourses, useCurrentCoursesTopics } from '../../hooks/course/hook';
 import { CustomQuizForm } from '../../components/quiz/quiz_form';
 import { useQuizzes } from '../../hooks/quiz/use_quizzes';
+import { quizAPI } from '../../services/quiz_services/api';
 
 const { TabPane } = Tabs;
 
 interface StudentQuizListProps {
     studentId: string;
-    onQuizStart?: (quizId: string) => void;
+    onQuizStart?: (attempt_id: string) => void;
 }
 
 export const StudentQuizList: React.FC<StudentQuizListProps> = ({
@@ -41,11 +42,18 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         createCustomQuiz
     } = useQuizzes(studentId);
 
-    const handleStartQuiz = (studentId: string) => {
-        if (onQuizStart) {
-            onQuizStart(studentId);
+    const handleStartQuiz = async () => {
+        if (!onQuizStart) return;
+
+        try {
+            const response = await quizAPI.startQuiz({});
+            onQuizStart(response.data.quizSession.attempt_id);
+        } catch (error) {
+            message.error('Failed to start quiz. Please try again.');
+            console.error(error);
         }
     };
+
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
         await createCustomQuiz(values);
