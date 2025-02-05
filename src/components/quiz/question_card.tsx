@@ -1,3 +1,4 @@
+// src/components/quiz/QuestionCard.tsx
 import React from 'react';
 import { Card, Radio, Space, Button, Progress, Typography, Tooltip } from 'antd';
 import { QuestionCircleOutlined, LoadingOutlined, CheckCircleOutlined } from '@ant-design/icons';
@@ -9,7 +10,8 @@ interface QuestionCardProps {
     question: Question;
     currentIndex: number;
     totalQuestions: number;
-    remainingTime: number;
+    quizTimeRemaining: number;
+    questionTimeSpent: number;
     selectedAnswer: string | null;
     isSubmitting: boolean;
     onSelectAnswer: (answer: string) => void;
@@ -21,15 +23,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     question,
     currentIndex,
     totalQuestions,
-    remainingTime,
+    quizTimeRemaining,
+    questionTimeSpent,
     selectedAnswer,
     isSubmitting,
     onSelectAnswer,
     onSubmit,
     onShowHint
 }) => {
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = remainingTime % 60;
+    const minutes = Math.floor(quizTimeRemaining / 60);
+    const seconds = quizTimeRemaining % 60;
     const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     const progressPercent = (currentIndex / totalQuestions) * 100;
 
@@ -50,18 +53,28 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         >
             <Space direction="vertical" size="large" className="w-full">
                 <div className="flex justify-between items-center">
-                    <Progress
-                        percent={progressPercent}
-                        size="small"
-                        status="active"
-                        className="w-2/3"
-                    />
-                    <Tooltip title="Time remaining for this question">
-                        <Text
-                            className={`timer text-lg ${remainingTime <= 30 ? 'text-red-500' : ''}`}
-                            strong
-                        >
-                            {timeString}
+                    <div className="flex items-center gap-4 w-full">
+                        <Progress
+                            percent={progressPercent}
+                            size="small"
+                            status="active"
+                            className="w-2/3"
+                        />
+                        <Tooltip title="Quiz time remaining">
+                            <Text
+                                className={`timer text-lg ${quizTimeRemaining <= 60 ? 'text-red-500' : ''}`}
+                                strong
+                            >
+                                {timeString}
+                            </Text>
+                        </Tooltip>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                    <Tooltip title="Time spent on this question">
+                        <Text className="text-gray-600">
+                            Time spent: {Math.floor(questionTimeSpent)} seconds
                         </Text>
                     </Tooltip>
                 </div>

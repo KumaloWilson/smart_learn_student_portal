@@ -182,6 +182,7 @@ const QuizSessionContainer: React.FC = () => {
             <QuizSession
                 attempt_id={attempt_id!}
                 questions={session.questions}
+                quizTimeLimit={30}
                 onQuizComplete={handleQuizComplete}
             />
 
