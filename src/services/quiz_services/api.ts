@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../../configs/config';
 import { AnyObject } from 'antd/es/_util/type';
+import { QuizStartResponse } from '../../models/quiz_session';
 
 export const quizAPI = {
     // Start a new quiz attempt
-    startQuiz: async (requestBody: AnyObject) => {
+    startQuiz: async (requestBody: AnyObject): Promise<QuizStartResponse> => {
         const response = await axios.post(`${API_BASE_URL}/quiz/session/start`, requestBody);
         return response.data;
     },

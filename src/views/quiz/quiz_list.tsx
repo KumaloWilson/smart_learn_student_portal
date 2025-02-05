@@ -1,60 +1,100 @@
 import React, { useState } from 'react';
-import { Tabs, Button, Spin } from 'antd';
+import { Tabs, Button, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Quiz } from '../../models/quiz';
-import { QuizCard } from '../../components/quiz/quiz_card';
 import { useCurrentCourses, useCurrentCoursesTopics } from '../../hooks/course/hook';
-import { CustomQuizForm } from '../../components/quiz/quiz_form';
 import { useQuizzes } from '../../hooks/quiz/use_quizzes';
+import { quizAPI } from '../../services/quiz_services/api';
+import { QuizCard } from '../../components/quiz/quiz_card';
+import { CustomQuizForm } from '../../components/quiz/quiz_form';
 
 const { TabPane } = Tabs;
 
 interface StudentQuizListProps {
     studentId: string;
-    onQuizStart?: (quizId: string) => void;
+    onQuizStart?: (attemptId: string) => void;
 }
 
 export const StudentQuizList: React.FC<StudentQuizListProps> = ({
     studentId,
     onQuizStart
 }) => {
-    // States
     const [formVisible, setFormVisible] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<string>('');
+    const [loading, setLoading] = useState(false);
 
-    // Fetch current courses
     const {
         data: currentCourses,
         isLoading: coursesLoading
     } = useCurrentCourses(studentId);
 
-    // Fetch selected course topics
     const {
         data: selectedCourseTopics,
         isLoading: topicsLoading
     } = useCurrentCoursesTopics(selectedCourse);
 
-    // Fetch quizzes
     const {
         quizzes,
         isLoading: quizzesLoading,
         createCustomQuiz
     } = useQuizzes(studentId);
 
-    const handleStartQuiz = (quizId: string) => {
-        if (onQuizStart) {
-            onQuizStart(quizId);
+    const handleStartQuiz = async (quiz: Quiz) => {
+        if (!onQuizStart) return;
+
+        setLoading(true);
+        try {
+            const requestBody = {
+                student_id: studentId,
+                quiz: {
+                    quiz_id: quiz.quiz_id,
+                    course_id: quiz.course_id,
+                    topic: quiz.topic,
+                    subtopic: quiz.subtopic,
+                    difficulty: quiz.difficulty,
+                    created_by: quiz.created_by,
+                    total_questions: quiz.total_questions,
+                    time_limit: quiz.time_limit,
+                    passing_score: quiz.passing_score,
+                    status: quiz.status,
+                    learning_objectives: Array.isArray(quiz.learning_objectives)
+                        ? quiz.learning_objectives
+                        : quiz.learning_objectives ? JSON.parse(quiz.learning_objectives) : [],
+                    tags: Array.isArray(quiz.tags) ? quiz.tags : quiz.tags ? JSON.parse(quiz.tags) : []
+                }
+            };
+
+            console.log(requestBody);
+
+            const response = await quizAPI.startQuiz(requestBody);
+
+            if (response.success) {
+                message.success(response.message);
+                onQuizStart(response.data.quizSession.attempt_id);
+            } else {
+                message.error(response.message || 'Failed to start quiz');
+            }
+
+        } catch (error: any) {
+            message.error(error.response?.data?.message || 'Failed to start quiz. Please try again.');
+            console.error('Quiz start error:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
-        await createCustomQuiz(values);
-        setFormVisible(false);
+        try {
+            await createCustomQuiz(values);
+            setFormVisible(false);
+            message.success('Custom quiz created successfully!');
+        } catch (error) {
+            message.error('Failed to create custom quiz');
+            console.error('Create quiz error:', error);
+        }
     };
 
-    // Handle course selection change
     const handleCourseChange = (courseId: string) => {
-        console.log('Selected course:', courseId);
         setSelectedCourse(courseId);
     };
 
@@ -77,6 +117,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => setFormVisible(true)}
+                    loading={loading}
                 >
                     Create Custom Quiz
                 </Button>
@@ -89,7 +130,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                             <QuizCard
                                 key={quiz.quiz_id}
                                 quiz={quiz}
-                                onStart={() => handleStartQuiz(quiz.quiz_id)}
+                                onStart={handleStartQuiz}
                             />
                         ))}
                         {quizzes.length === 0 && (
@@ -107,7 +148,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                                 <QuizCard
                                     key={quiz.quiz_id}
                                     quiz={quiz}
-                                    onStart={() => handleStartQuiz(quiz.quiz_id)}
+                                    onStart={handleStartQuiz}
                                 />
                             ))}
                             {getQuizzesForCourse(course.course_id).length === 0 && (
