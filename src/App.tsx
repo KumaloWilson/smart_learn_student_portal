@@ -29,6 +29,7 @@ import LoginPage from "./views/auth/login_page.tsx";
 import { useAuth } from "./hooks/auth/auth.ts";
 import { CourseDashboard } from "./views/my_courses/my_courses.tsx";
 import StudentQuizList from "./views/quiz/quiz_list.tsx";
+import LearningAnalytics from "./views/perfomance/learning_analyics.tsx";
 
 const queryClient = new QueryClient();
 const { Content, Footer, Sider } = Layout;
@@ -158,7 +159,7 @@ const App: React.FC = () => {
       exams: <div>Exam Schedule Content</div>,
       deadlines: <div>Assignment Deadlines Content</div>,
       grades: <div>Grades & Marks Content</div>,
-      analytics: <div>Learning Analytics Content</div>,
+      analytics: <LearningAnalytics />,
       feedback: <div>Instructor Feedback Content</div>,
       library: <div>Digital Library Content</div>,
       pastpapers: <div>Past Papers Content</div>,

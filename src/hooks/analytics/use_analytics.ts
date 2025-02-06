@@ -2,6 +2,7 @@
 import { useQuery } from 'react-query';
 import axios from 'axios';
 import { TopicPerformance } from '../../models/student_topic_perfomance';
+import { API_BASE_URL } from '../../configs/config';
 
 interface LearningAnalyticsResponse {
     success: boolean;
@@ -22,7 +23,7 @@ export const useLearningAnalytics = (studentId?: string) => {
         async () => {
             if (!studentId) throw new Error('Student ID is required');
 
-            const { data } = await axios.get(`/api/student/${studentId}/learning-analytics`);
+            const { data } = await axios.get(`${API_BASE_URL}/quiz/analytics/student/${studentId}`);
             return data;
         },
         {
