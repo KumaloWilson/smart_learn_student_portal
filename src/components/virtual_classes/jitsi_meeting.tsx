@@ -2,19 +2,20 @@ import React from 'react';
 import { JaaSMeeting } from '@jitsi/react-sdk';
 import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Lecturer } from '../../models/lecturer';
 
-interface JitsiMeetingProps {
+interface StudentMeetingProps {
     jwt: string;
     roomName: string;
-    lecturer: Lecturer;
+    studentName: string;
+    studentEmail: string;
     onError: (error: Error) => void;
 }
 
-export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
+export const StudentMeeting: React.FC<StudentMeetingProps> = ({
     jwt,
     roomName,
-    lecturer,
+    studentName,
+    studentEmail,
     onError
 }) => {
     // Custom spinner component
@@ -39,35 +40,31 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
                     enableNoisyMicDetection: true,
                     enableLobby: false, // Disable lobby
                     hideLobbyButton: true,
-                    disableRemoteMute: false,
+                    disableRemoteMute: true, // Students cannot mute others
                     remoteVideoMenu: {
-                        disableKick: false,
+                        disableKick: true,
                         disableGrantModerator: true,
                         disablePrivateChat: false
                     }
                 }}
                 interfaceConfigOverwrite={{
                     TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop',
-                        'fullscreen', 'fodeviceselection', 'hangup', 'profile',
-                        'chat', 'recording', 'livestreaming', 'etherpad',
-                        'sharedvideo', 'settings', 'raisehand', 'videoquality',
-                        'filmstrip', 'shortcuts', 'tileview', 'download', 'help'
+                        'microphone', 'camera', 'chat', 'raisehand', 'tileview', 'fullscreen', 'hangup', 'sharedvideo',
                     ],
                     SHOW_JITSI_WATERMARK: false,
                     SHOW_WATERMARK_FOR_GUESTS: false,
                     DEFAULT_REMOTE_DISPLAY_NAME: 'Student',
                     TOOLBAR_ALWAYS_VISIBLE: true,
                     DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-                    HIDE_INVITE_MORE_HEADER: false
+                    HIDE_INVITE_MORE_HEADER: true
                 }}
                 userInfo={{
-                    displayName: lecturer.last_name,
-                    email: lecturer.email
+                    displayName: studentName,
+                    email: studentEmail
                 }}
                 spinner={LoadingSpinner}
                 onApiReady={(externalApi) => {
-                    // Set up any needed event listeners
+                    // Handle student leaving the meeting
                     externalApi.addEventListener('videoConferenceLeft', () => {
                         window.location.href = '/virtual/classes';
                     });

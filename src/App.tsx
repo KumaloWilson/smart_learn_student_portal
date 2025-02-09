@@ -31,6 +31,9 @@ import { useAuth } from "./hooks/auth/auth.ts";
 import { CourseDashboard } from "./views/my_courses/my_courses.tsx";
 import StudentQuizList from "./views/quiz/quiz_list.tsx";
 import LearningAnalytics from "./views/perfomance/learning_analyics.tsx";
+import { VirtualClasses } from "./views/virtual_classes/virtual_class.tsx";
+import { LiveClass } from "./components/virtual_classes/live_class.tsx";
+
 
 const queryClient = new QueryClient();
 const { Content, Footer, Sider } = Layout;
@@ -163,7 +166,7 @@ const App: React.FC = () => {
       grades: <div>Grades & Marks Content</div>,
       analytics: <LearningAnalytics />,
       feedback: <div>Instructor Feedback Content</div>,
-      virtual_class: <div>Virtual Classes</div>,
+      virtual_class: <VirtualClasses studentId={student!.student_id!} />,
       studygroups: <div>Study Groups Content</div>,
       announcements: <div>Announcements Content</div>,
       messages: <div>Messages Content</div>,
@@ -312,6 +315,8 @@ const App: React.FC = () => {
                           />
                           {/* Add routes for other menu items */}
                           <Route path="/:tab" element={<MainContent />} /> {/* This will handle other menu items */}
+
+                          <Route path="/virtual/live/:classId" element={<LiveClass />} />
                           <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                       </div>

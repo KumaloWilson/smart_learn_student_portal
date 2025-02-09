@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, List, Button, Tag, message, Tooltip } from 'antd';
 import { VideoCameraOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { VirtualClass } from '../../models/virtual_class';
 import { virtualClassesAPI } from '../../services/virtual_classes/api';
+import { VirtualClass } from '../../models/virtual_class';
 
 interface ClassSchedulerProps {
     courseId: string | null;

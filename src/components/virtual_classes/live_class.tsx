@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spin, Alert, Button } from 'antd';
 import { virtualClassesAPI } from '../../services/virtual_classes/api';
-import type { VirtualClass } from '../../models/virtual_class';
-import { JitsiMeeting } from './jitsi_meeting';
 import { useAuth } from '../../hooks/auth/auth';
+import { VirtualClass } from '../../models/virtual_class';
+import { StudentMeeting } from './jitsi_meeting';
 
 export const LiveClass: React.FC = () => {
     const { classId } = useParams<{ classId: string }>();
@@ -13,7 +13,7 @@ export const LiveClass: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [jitsiToken, setJitsiToken] = useState<string | null>(null);
-    const { lecturer } = useAuth();
+    const { student } = useAuth();
 
     useEffect(() => {
         let isMounted = true;
@@ -70,9 +70,9 @@ export const LiveClass: React.FC = () => {
                     // Generate Jitsi token
                     const tokenResponse = await virtualClassesAPI.generateJitsiToken(classId, {
                         user: {
-                            name: `${lecturer!.first_name} ${lecturer!.last_name}`,
-                            email: lecturer?.email || '',
-                            avatar: lecturer?.profile_picture_url || ''
+                            name: `${student!.first_name} ${student!.last_name}`,
+                            email: student?.email || '',
+                            avatar: student?.photo_url || ''
                         }
                     });
 
@@ -107,7 +107,7 @@ export const LiveClass: React.FC = () => {
         return () => {
             isMounted = false;
         };
-    }, [classId, lecturer]);
+    }, [classId, student]);
 
     const handleError = (error: Error) => {
         console.error('Jitsi meeting error:', error);
@@ -171,10 +171,11 @@ export const LiveClass: React.FC = () => {
 
     return (
         <div className="h-screen">
-            <JitsiMeeting
-                jwt={jitsiToken}
+            <StudentMeeting
                 roomName={classData.meeting_link}
-                lecturer={lecturer!}
+                studentEmail={student!.email!}
+                studentName={`${student?.first_name} ${student?.last_name}`}
+                jwt={jitsiToken}
                 onError={handleError}
             />
         </div>
