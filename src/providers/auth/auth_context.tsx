@@ -1,5 +1,3 @@
-
-// src/contexts/AuthContext.tsx
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
@@ -45,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
-            setStudent(response.data);
+            setStudent(response.data.data);
             setIsAuthenticated(true);
         } catch (error) {
             console.error('Error fetching student data:', error);

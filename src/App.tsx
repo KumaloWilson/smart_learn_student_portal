@@ -16,7 +16,8 @@ import {
   BellOutlined,
   ReadOutlined,
   BulbOutlined,
-  RocketOutlined
+  RocketOutlined,
+  VideoCameraFilled
 } from "@ant-design/icons";
 import { Layout, Menu, theme, Spin } from "antd";
 import type { MenuProps } from "antd";
@@ -56,6 +57,8 @@ const App: React.FC = () => {
   const [breadcrumbItems, setBreadcrumbItems] = useState(['Student Portal', 'Dashboard']);
   const { loading, student } = useAuth();
 
+  console.log(student);
+
 
   const items: MenuProps["items"] = [
     {
@@ -93,10 +96,9 @@ const App: React.FC = () => {
     {
       key: "resources",
       icon: <ReadOutlined />,
-      label: "Resources",
+      label: "Meetings",
       children: [
-        { key: "library", label: "Digital Library" },
-        { key: "pastpapers", label: "Past Papers" },
+        { key: "virtual_class", label: "Virtual Classrooms", icon: <VideoCameraFilled /> },
         { key: "studygroups", label: "Study Groups", icon: <TeamOutlined /> }
       ]
     },
@@ -161,8 +163,7 @@ const App: React.FC = () => {
       grades: <div>Grades & Marks Content</div>,
       analytics: <LearningAnalytics />,
       feedback: <div>Instructor Feedback Content</div>,
-      library: <div>Digital Library Content</div>,
-      pastpapers: <div>Past Papers Content</div>,
+      virtual_class: <div>Virtual Classes</div>,
       studygroups: <div>Study Groups Content</div>,
       announcements: <div>Announcements Content</div>,
       messages: <div>Messages Content</div>,
