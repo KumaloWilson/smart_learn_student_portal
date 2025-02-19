@@ -15,29 +15,15 @@ interface StudentQuizListProps {
     onQuizStart?: (attemptId: string) => void;
 }
 
-export const StudentQuizList: React.FC<StudentQuizListProps> = ({
-    studentId,
-    onQuizStart
-}) => {
+export const StudentQuizList: React.FC<StudentQuizListProps> = ({ studentId, onQuizStart }) => {
     const [formVisible, setFormVisible] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [creatingQuiz, setCreatingQuiz] = useState(false);
 
-    const {
-        data: currentCourses,
-        isLoading: coursesLoading
-    } = useCurrentCourses(studentId);
-
-    const {
-        data: selectedCourseTopics,
-        isLoading: topicsLoading
-    } = useCurrentCoursesTopics(selectedCourse);
-
-    const {
-        quizzes,
-        isLoading: quizzesLoading,
-        createCustomQuiz
-    } = useQuizzes(studentId);
+    const { data: currentCourses, isLoading: coursesLoading } = useCurrentCourses(studentId);
+    const { data: selectedCourseTopics, isLoading: topicsLoading } = useCurrentCoursesTopics(selectedCourse);
+    const { quizzes, isLoading: quizzesLoading, createCustomQuiz } = useQuizzes(studentId);
 
     const handleStartQuiz = async (quiz: Quiz) => {
         if (!onQuizStart) return;
@@ -64,8 +50,6 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 }
             };
 
-            console.log(requestBody);
-
             const response = await quizAPI.startQuiz(requestBody);
 
             if (response.success) {
@@ -74,7 +58,6 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
             } else {
                 message.error(response.message || 'Failed to start quiz');
             }
-
         } catch (error: any) {
             message.error(error.response?.data?.message || 'Failed to start quiz. Please try again.');
             console.error('Quiz start error:', error);
@@ -83,7 +66,10 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         }
     };
 
+
+
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
+        setCreatingQuiz(true);
         try {
             const newQuiz = await createCustomQuiz(values);
             setFormVisible(false);
@@ -95,10 +81,10 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         } catch (error) {
             message.error('Failed to create custom quiz');
             console.error('Create quiz error:', error);
+        } finally {
+            setCreatingQuiz(false);
         }
     };
-
-
 
     const handleCourseChange = (courseId: string) => {
         setSelectedCourse(courseId);
@@ -112,18 +98,21 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
         );
     }
 
-    const getQuizzesForCourse = (courseId: string) => {
-        return quizzes.filter(quiz => quiz.course_id === courseId);
-    };
-
     return (
-        <div className="student-quiz-list">
+        <div className="student-quiz-list relative">
+            {/* Global Loading Overlay */}
+            {(loading || creatingQuiz) && (
+                <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+                    <Spin size="large" tip={creatingQuiz ? 'Creating Quiz...' : 'Starting Quiz...'} />
+                </div>
+            )}
+
             <div className="mb-4">
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => setFormVisible(true)}
-                    loading={loading}
+                    loading={creatingQuiz} // Show loading while creating a quiz
                 >
                     Create Custom Quiz
                 </Button>
@@ -133,11 +122,7 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 <TabPane tab="All Quizzes" key="all">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {quizzes.map(quiz => (
-                            <QuizCard
-                                key={quiz.quiz_id}
-                                quiz={quiz}
-                                onStart={handleStartQuiz}
-                            />
+                            <QuizCard key={quiz.quiz_id} quiz={quiz} onStart={handleStartQuiz} />
                         ))}
                         {quizzes.length === 0 && (
                             <div className="col-span-full text-center py-8 text-gray-500">
@@ -150,14 +135,10 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
                 {currentCourses?.map(course => (
                     <TabPane tab={course.course_name} key={course.course_id}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {getQuizzesForCourse(course.course_id).map(quiz => (
-                                <QuizCard
-                                    key={quiz.quiz_id}
-                                    quiz={quiz}
-                                    onStart={handleStartQuiz}
-                                />
+                            {quizzes.filter(q => q.course_id === course.course_id).map(quiz => (
+                                <QuizCard key={quiz.quiz_id} quiz={quiz} onStart={handleStartQuiz} />
                             ))}
-                            {getQuizzesForCourse(course.course_id).length === 0 && (
+                            {quizzes.filter(q => q.course_id === course.course_id).length === 0 && (
                                 <div className="col-span-full text-center py-8 text-gray-500">
                                     No quizzes available for this course
                                 </div>

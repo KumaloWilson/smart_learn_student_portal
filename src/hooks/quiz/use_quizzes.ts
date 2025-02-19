@@ -70,6 +70,8 @@ export const useQuizzes = (studentId: string): UseQuizzesResult => {
             };
 
             const response = await quizAPI.createQuiz(requestBody);
+
+
             if (response.success) {
                 message.success('Quiz created successfully');
 

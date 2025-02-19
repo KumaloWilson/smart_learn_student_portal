@@ -86,6 +86,7 @@ export const CustomQuizForm: React.FC<QuizFormProps> = ({
                 passing_score: values.passing_score,
                 learning_objectives: values.learning_objectives || [],
                 tags: tags,
+                creator_role: 'student' as 'student' | 'lecturer',
                 status: 'active' as 'draft' | 'active' | 'archived'
             };
             await onSubmit(formData);
