@@ -85,14 +85,20 @@ export const StudentQuizList: React.FC<StudentQuizListProps> = ({
 
     const handleCreateQuiz = async (values: Partial<Quiz>) => {
         try {
-            await createCustomQuiz(values);
+            const newQuiz = await createCustomQuiz(values);
             setFormVisible(false);
             message.success('Custom quiz created successfully!');
+
+            if (newQuiz) {
+                await handleStartQuiz(newQuiz);
+            }
         } catch (error) {
             message.error('Failed to create custom quiz');
             console.error('Create quiz error:', error);
         }
     };
+
+
 
     const handleCourseChange = (courseId: string) => {
         setSelectedCourse(courseId);

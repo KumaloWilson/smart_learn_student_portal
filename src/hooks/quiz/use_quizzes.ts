@@ -8,7 +8,7 @@ interface UseQuizzesResult {
     quizzes: Quiz[];
     isLoading: boolean;
     error: string | null;
-    createCustomQuiz: (values: Partial<Quiz>) => Promise<unknown>
+    createCustomQuiz: (values: Partial<Quiz>) => Promise<Quiz>
     refreshQuizzes: () => Promise<void>;
     getQuizzesByCourse: (courseId: string) => Quiz[];
 }
@@ -72,14 +72,18 @@ export const useQuizzes = (studentId: string): UseQuizzesResult => {
             const response = await quizAPI.createQuiz(requestBody);
             if (response.success) {
                 message.success('Quiz created successfully');
+
+                // Refresh quizzes and return the created quiz
                 await loadQuizzes();
+                return response.data;  // Return the created quiz object
             }
-            return response;
+            throw new Error('Quiz creation failed');
         } catch (error) {
             message.error('Failed to create quiz');
             throw error;
         }
     };
+
 
 
     const refreshQuizzes = async () => {
