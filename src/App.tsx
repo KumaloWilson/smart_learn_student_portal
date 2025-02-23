@@ -9,7 +9,6 @@ import {
   UserOutlined,
   QuestionCircleOutlined,
   FormOutlined,
-  CheckCircleOutlined,
   LineChartOutlined,
   HistoryOutlined,
   TeamOutlined,
@@ -33,6 +32,7 @@ import StudentQuizList from "./views/quiz/quiz_list.tsx";
 import LearningAnalytics from "./views/perfomance/learning_analyics.tsx";
 import { VirtualClasses } from "./views/virtual_classes/virtual_class.tsx";
 import { LiveClass } from "./components/virtual_classes/live_class.tsx";
+import QuizAttempts from "./views/quiz/quiz_attempts.tsx";
 
 
 const queryClient = new QueryClient();
@@ -81,7 +81,6 @@ const App: React.FC = () => {
       children: [
         { key: "available", label: "Available Quizzes", icon: <RocketOutlined /> },
         { key: "attempts", label: "My Attempts", icon: <HistoryOutlined /> },
-        { key: "results", label: "Quiz Results", icon: <CheckCircleOutlined /> },
         { key: "progress", label: "Learning Progress", icon: <LineChartOutlined /> },
         { key: "practice", label: "Practice Tests", icon: <FormOutlined /> }
       ]
@@ -156,8 +155,9 @@ const App: React.FC = () => {
           onQuizStart={handleQuizStart}
         />
       ),
-      attempts: <StudentQuizList studentId={student!.student_id!} />,
-      results: <StudentQuizList studentId={student!.student_id!} />,
+      attempts: <QuizAttempts
+        studentId={student!.student_id!}
+      />,
       progress: <div>Learning Progress Content</div>,
       assignments: <div>Assignments Content</div>,
       timetable: <div>Class Timetable Content</div>,
@@ -299,7 +299,7 @@ const App: React.FC = () => {
                           <Route path="/dashboard" element={<MainContent />} />
                           <Route path="/courses" element={<CourseDashboard />} />
                           <Route path="/quiz/available" element={<MainContent />} />
-                          <Route path="/quiz/attempts" element={<MainContent />} />
+                          <Route path="/quiz/attempts" element={<QuizAttempts />} />
                           <Route path="/quiz/results" element={<MainContent />} />
                           <Route path="/quiz/session/:attempt_id" element={<QuizSessionContainer />} />
                           <Route
@@ -314,8 +314,7 @@ const App: React.FC = () => {
                             }
                           />
                           {/* Add routes for other menu items */}
-                          <Route path="/:tab" element={<MainContent />} /> {/* This will handle other menu items */}
-
+                          <Route path="/:tab" element={<MainContent />} />
                           <Route path="/virtual/live/:classId" element={<LiveClass />} />
                           <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
