@@ -9,7 +9,7 @@ import { QuestionCard } from './question_card';
 interface QuizSessionProps {
     attempt_id: string;
     questions?: Question[];
-    timeLimit: number; // in minutes
+    timeLimit: number;
     onQuizComplete: (responses: QuestionResponse[]) => void;
 }
 
